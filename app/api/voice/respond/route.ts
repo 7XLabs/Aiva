@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getBusiness, getCall, upsertCall } from "@/lib/db";
 import { runAgentTurn, type ChatTurn } from "@/lib/agent";
 import { analyzeCall } from "@/lib/insights";
+import { getCallerContext } from "@/lib/callerMemory";
 import {
   sayAndGather,
   sayAndHangup,
@@ -52,10 +53,26 @@ export async function POST(req: NextRequest) {
       content: t.text,
     })) ?? [];
 
-  const { reply, events } = await runAgentTurn(business, history, speech);
+  const callerContext = call
+    ? await getCallerContext(businessId, call.callerPhone)
+    : undefined;
+
+  const {
+    reply,
+    events,
+    language: newLanguage,
+  } = await runAgentTurn(business, history, speech, {
+    language: lang,
+    callerContext,
+  });
+
+  // If the agent switched language, the rest of the call (TTS voice and
+  // speech recognition locale) follows immediately.
+  const replyLang = newLanguage ?? lang;
 
   // Persist transcript + outcome.
   if (call) {
+    if (newLanguage) call.language = newLanguage;
     const now = new Date().toISOString();
     call.transcript.push(
       { role: "caller", text: speech, timestamp: now },
@@ -69,7 +86,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (events.includes("transfer_requested")) {
-    return new NextResponse(sayAndTransfer(reply, lang, business.phone), {
+    return new NextResponse(sayAndTransfer(reply, replyLang, business.phone), {
       headers: xmlHeaders(),
     });
   }
@@ -85,12 +102,12 @@ export async function POST(req: NextRequest) {
       // must not wait for it.
       void analyzeCall(business, call).catch(() => {});
     }
-    return new NextResponse(sayAndHangup(reply, lang), {
+    return new NextResponse(sayAndHangup(reply, replyLang), {
       headers: xmlHeaders(),
     });
   }
 
-  return new NextResponse(sayAndGather(reply, lang, actionUrl), {
+  return new NextResponse(sayAndGather(reply, replyLang, actionUrl), {
     headers: xmlHeaders(),
   });
 }

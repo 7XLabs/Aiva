@@ -23,7 +23,37 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        display: ["var(--font-fraunces)", "Georgia", "serif"],
+      },
+      animation: {
+        "fade-up": "fadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) both",
+        floaty: "floaty 7s ease-in-out infinite",
+        orb: "orb 22s ease-in-out infinite alternate",
+        marquee: "marquee 28s linear infinite",
+        shine: "shine 2.6s ease-in-out infinite",
+      },
+      keyframes: {
+        fadeUp: {
+          from: { opacity: "0", transform: "translateY(24px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        floaty: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-14px)" },
+        },
+        orb: {
+          from: { transform: "translate(0, 0) scale(1)" },
+          to: { transform: "translate(60px, -40px) scale(1.15)" },
+        },
+        marquee: {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(-50%)" },
+        },
+        shine: {
+          "0%": { backgroundPosition: "200% center" },
+          "100%": { backgroundPosition: "-200% center" },
+        },
       },
     },
   },

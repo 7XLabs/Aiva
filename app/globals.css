@@ -7,32 +7,163 @@
 }
 
 body {
-  @apply bg-slate-950 text-slate-100 antialiased;
+  @apply bg-[#07080f] text-slate-100 antialiased;
+  background-image: radial-gradient(
+      ellipse 80% 50% at 50% -10%,
+      rgba(84, 100, 251, 0.13),
+      transparent
+    );
+  background-attachment: fixed;
+}
+
+::selection {
+  @apply bg-brand-500/40 text-white;
 }
 
 .container-page {
   @apply mx-auto max-w-6xl px-6;
 }
 
+/* ---------- Buttons ---------- */
 .btn-primary {
-  @apply inline-flex items-center gap-2 rounded-xl bg-brand-500 px-6 py-3 font-semibold text-white shadow-lg shadow-brand-500/25 transition hover:bg-brand-400 hover:shadow-brand-400/30;
+  @apply relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 px-6 py-3 font-semibold text-white shadow-[0_8px_30px_-6px_rgba(84,100,251,0.55)] transition-all duration-300;
+}
+.btn-primary:hover {
+  @apply -translate-y-0.5 shadow-[0_14px_40px_-6px_rgba(84,100,251,0.7)];
+}
+.btn-primary:active {
+  @apply translate-y-0 scale-[0.98];
+}
+/* moving sheen */
+.btn-primary::after {
+  content: "";
+  @apply absolute inset-0 opacity-0 transition-opacity duration-300;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.25) 50%,
+    transparent 60%
+  );
+  background-size: 200% 100%;
+}
+.btn-primary:hover::after {
+  @apply opacity-100;
+  animation: shine 1.2s ease-in-out;
 }
 
 .btn-secondary {
-  @apply inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-6 py-3 font-semibold text-slate-200 transition hover:border-slate-500 hover:bg-slate-800;
+  @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-700/80 bg-slate-900/60 px-6 py-3 font-semibold text-slate-200 backdrop-blur transition-all duration-300;
+}
+.btn-secondary:hover {
+  @apply -translate-y-0.5 border-slate-500 bg-slate-800/80 text-white;
+}
+.btn-secondary:active {
+  @apply translate-y-0 scale-[0.98];
 }
 
+/* ---------- Cards ---------- */
 .card {
-  @apply rounded-2xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur;
+  @apply relative rounded-2xl border border-slate-800/80 bg-slate-900/50 p-6 backdrop-blur transition-all duration-300;
+}
+.card-hover:hover {
+  @apply -translate-y-1 border-brand-500/40 bg-slate-900/80 shadow-[0_20px_50px_-20px_rgba(84,100,251,0.35)];
 }
 
+/* gradient-edged feature card */
+.card-glow {
+  @apply relative rounded-2xl p-px;
+  background: linear-gradient(
+    140deg,
+    rgba(84, 100, 251, 0.5),
+    rgba(148, 163, 184, 0.12) 40%,
+    rgba(168, 85, 247, 0.35)
+  );
+}
+.card-glow > div {
+  @apply h-full rounded-[calc(1rem-1px)] bg-[#0b0d17] p-6;
+}
+
+/* ---------- Glass chrome ---------- */
+.glass {
+  @apply border-b border-white/5 bg-[#07080f]/70 backdrop-blur-xl;
+}
+
+/* ---------- Typographic helpers ---------- */
+.text-gradient {
+  @apply bg-gradient-to-r from-brand-300 via-brand-400 to-purple-400 bg-clip-text text-transparent;
+}
+.eyebrow {
+  @apply inline-flex items-center gap-2 rounded-full border border-brand-500/30 bg-brand-500/10 px-4 py-1 text-xs font-medium uppercase tracking-[0.18em] text-brand-300;
+}
+
+/* ---------- Scroll reveal (driven by <Reveal/>) ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- Ambient orbs ---------- */
+.orb {
+  @apply pointer-events-none absolute rounded-full opacity-40 blur-3xl;
+}
+
+/* ---------- Waveform ---------- */
+.waveform {
+  @apply flex h-5 items-center gap-[3px];
+}
+.waveform span {
+  @apply w-[3px] rounded-full bg-brand-400;
+  animation: wavebar 1.1s ease-in-out infinite;
+}
+.waveform span:nth-child(1) { animation-delay: 0s; height: 40%; }
+.waveform span:nth-child(2) { animation-delay: 0.15s; height: 90%; }
+.waveform span:nth-child(3) { animation-delay: 0.3s; height: 60%; }
+.waveform span:nth-child(4) { animation-delay: 0.45s; height: 100%; }
+.waveform span:nth-child(5) { animation-delay: 0.6s; height: 50%; }
+@keyframes wavebar {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1); }
+}
+
+/* ---------- Typing dots ---------- */
+.typing-dots span {
+  @apply inline-block h-1.5 w-1.5 rounded-full bg-slate-400;
+  animation: typingdot 1.2s ease-in-out infinite;
+}
+.typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes typingdot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+/* ---------- Marquee ---------- */
+.marquee-mask {
+  mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
+}
+
+/* ---------- Mic pulse (demo) ---------- */
 @keyframes pulse-ring {
   0% { transform: scale(1); opacity: 0.6; }
   100% { transform: scale(1.8); opacity: 0; }
 }
-
 .pulse-ring::before {
   content: "";
   @apply absolute inset-0 rounded-full bg-brand-500;
   animation: pulse-ring 1.6s ease-out infinite;
 }
+
+/* ---------- Scrollbar ---------- */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  @apply rounded-full bg-slate-700/70;
+}
+::-webkit-scrollbar-thumb:hover { @apply bg-slate-600; }

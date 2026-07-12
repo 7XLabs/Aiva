@@ -20,12 +20,46 @@ export default function CallsPage() {
     .slice()
     .sort((a, b) => b.startedAt.localeCompare(a.startedAt));
 
+  function exportCsv() {
+    const esc = (s: string) => `"${s.replace(/"/g, '""')}"`;
+    const rows = [
+      ["started_at", "caller", "channel", "language", "outcome", "sentiment", "summary"],
+      ...calls.map((c) => [
+        c.startedAt,
+        c.callerPhone,
+        c.channel ?? "phone",
+        c.language,
+        c.outcome,
+        c.sentiment ?? "",
+        c.summary ?? "",
+      ]),
+    ];
+    const csv = rows.map((r) => r.map(esc).join(",")).join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `aiva-calls-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div>
-      <h1 className="text-2xl font-bold">Calls</h1>
-      <p className="mt-1 text-sm text-slate-400">
-        Every conversation, fully transcribed.
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">Calls</h1>
+          <p className="mt-1 text-sm text-slate-400">
+            Every conversation, fully transcribed.
+          </p>
+        </div>
+        <button
+          onClick={exportCsv}
+          disabled={calls.length === 0}
+          className="btn-secondary !px-4 !py-2 text-sm disabled:opacity-40"
+        >
+          ⬇ Export CSV
+        </button>
+      </div>
 
       <div className="mt-6 space-y-3">
         {calls.length === 0 && (

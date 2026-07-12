@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { useDashboardData } from "@/lib/useDashboardData";
+import type { Appointment } from "@/lib/types";
 
 const STATUS_COLORS: Record<string, string> = {
   confirmed: "bg-emerald-500/15 text-emerald-300",
@@ -10,8 +12,19 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function AppointmentsPage() {
   const { data } = useDashboardData();
+  const [overrides, setOverrides] = useState<Record<string, Appointment["status"]>>({});
+
+  async function setStatus(id: string, status: Appointment["status"]) {
+    setOverrides((o) => ({ ...o, [id]: status }));
+    await fetch("/api/appointments", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status }),
+    });
+  }
 
   const appts = (data?.appointments ?? [])
+    .map((a) => (overrides[a.id] ? { ...a, status: overrides[a.id] } : a))
     .slice()
     .sort((a, b) => `${b.date}${b.time}`.localeCompare(`${a.date}${a.time}`));
 
@@ -31,13 +44,14 @@ export default function AppointmentsPage() {
               <th className="py-3 pr-4">Date</th>
               <th className="py-3 pr-4">Time</th>
               <th className="py-3 pr-4">Phone</th>
-              <th className="py-3">Status</th>
+              <th className="py-3 pr-4">Status</th>
+              <th className="py-3">Actions</th>
             </tr>
           </thead>
           <tbody>
             {appts.length === 0 && (
               <tr>
-                <td colSpan={6} className="py-8 text-center text-slate-500">
+                <td colSpan={7} className="py-8 text-center text-slate-500">
                   No appointments yet — book one through the demo!
                 </td>
               </tr>
@@ -49,7 +63,7 @@ export default function AppointmentsPage() {
                 <td className="py-3 pr-4 text-slate-300">{a.date}</td>
                 <td className="py-3 pr-4 text-slate-300">{a.time}</td>
                 <td className="py-3 pr-4 text-slate-400">{a.customerPhone}</td>
-                <td className="py-3">
+                <td className="py-3 pr-4">
                   <span
                     className={`rounded-full px-3 py-1 text-xs ${
                       STATUS_COLORS[a.status] ?? ""
@@ -57,6 +71,24 @@ export default function AppointmentsPage() {
                   >
                     {a.status}
                   </span>
+                </td>
+                <td className="py-3">
+                  {a.status === "confirmed" && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setStatus(a.id, "completed")}
+                        className="rounded-lg border border-emerald-500/30 px-2.5 py-1 text-xs text-emerald-300 transition hover:bg-emerald-500/15"
+                      >
+                        Complete
+                      </button>
+                      <button
+                        onClick={() => setStatus(a.id, "cancelled")}
+                        className="rounded-lg border border-red-500/30 px-2.5 py-1 text-xs text-red-300 transition hover:bg-red-500/15"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}

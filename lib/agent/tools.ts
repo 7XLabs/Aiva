@@ -1,10 +1,13 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import {
+  addActionItem,
   addAppointment,
   addOrder,
   isSlotTaken,
   newId,
 } from "../db";
+import { findFreeSlots } from "../slots";
+import { sendSms } from "../sms";
 import type { Business, Order, OrderItem } from "../types";
 
 // Tool definitions passed to Claude. Descriptions are prescriptive about WHEN
@@ -69,6 +72,34 @@ export const agentTools: Anthropic.Tool[] = [
     },
   },
   {
+    name: "find_free_slots",
+    description:
+      "Get a short list of genuinely free appointment slots for a date. Call when the caller's preferred slot is taken, or when they ask 'what times do you have?'. Offer at most 2-3 of the returned times.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        date: { type: "string", description: "Date in YYYY-MM-DD" },
+      },
+      required: ["date"],
+    },
+  },
+  {
+    name: "request_callback",
+    description:
+      "Log a callback request or follow-up task for the staff. Call when the caller wants a human to call them back, has a question you cannot answer, or asks for something requiring staff action (prescription refills, complaints, special requests).",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        summary: {
+          type: "string",
+          description: "One sentence describing what the staff should do",
+        },
+        customer_phone: { type: "string" },
+      },
+      required: ["summary"],
+    },
+  },
+  {
     name: "transfer_to_human",
     description:
       "Transfer the call to a human staff member. Call when the caller explicitly asks for a person, is upset, or has a request you cannot handle.",
@@ -86,7 +117,11 @@ export interface ToolOutcome {
   result: string;
   isError?: boolean;
   // Signals the caller-facing pipeline (voice webhook / demo) about side effects.
-  event?: "appointment_booked" | "order_taken" | "transfer_requested";
+  event?:
+    | "appointment_booked"
+    | "order_taken"
+    | "transfer_requested"
+    | "callback_logged";
 }
 
 export async function executeTool(
@@ -127,9 +162,41 @@ export async function executeTool(
           notes: input.notes ? String(input.notes) : undefined,
           createdAt: new Date().toISOString(),
         });
+        // Fire-and-forget SMS confirmation (no-op without Twilio creds).
+        void sendSms(
+          appt.customerPhone,
+          `${business.name}: your ${appt.serviceName} is confirmed for ${appt.date} at ${appt.time}. Ref ${appt.id}. Reply to this number to reschedule.`
+        );
         return {
-          result: `Appointment confirmed. Reference: ${appt.id}.`,
+          result: `Appointment confirmed and SMS confirmation sent. Reference: ${appt.id}.`,
           event: "appointment_booked",
+        };
+      }
+
+      case "find_free_slots": {
+        const slots = await findFreeSlots(business.id, String(input.date));
+        return {
+          result: slots.length
+            ? `Free slots on ${input.date}: ${slots.join(", ")}.`
+            : `No free slots remain on ${input.date}. Suggest another day.`,
+        };
+      }
+
+      case "request_callback": {
+        await addActionItem({
+          id: newId("task"),
+          businessId: business.id,
+          text: String(input.summary),
+          customerPhone: input.customer_phone
+            ? String(input.customer_phone)
+            : undefined,
+          done: false,
+          createdAt: new Date().toISOString(),
+        });
+        return {
+          result:
+            "Callback request logged for the staff. Tell the caller someone will get back to them soon.",
+          event: "callback_logged",
         };
       }
 

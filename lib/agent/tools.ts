@@ -100,6 +100,22 @@ export const agentTools: Anthropic.Tool[] = [
     },
   },
   {
+    name: "set_language",
+    description:
+      "Switch the conversation language. Call IMMEDIATELY when the caller speaks, or asks for, a different language than the current one — this retunes the phone line's voice and speech recognition. Then reply in that language.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        language: {
+          type: "string",
+          enum: ["en", "hi", "es", "fr", "de", "it", "pt", "ja"],
+          description: "ISO 639-1 code of the caller's language",
+        },
+      },
+      required: ["language"],
+    },
+  },
+  {
     name: "transfer_to_human",
     description:
       "Transfer the call to a human staff member. Call when the caller explicitly asks for a person, is upset, or has a request you cannot handle.",
@@ -116,6 +132,8 @@ export const agentTools: Anthropic.Tool[] = [
 export interface ToolOutcome {
   result: string;
   isError?: boolean;
+  // The caller's language, when the agent switches it mid-call.
+  language?: string;
   // Signals the caller-facing pipeline (voice webhook / demo) about side effects.
   event?:
     | "appointment_booked"
@@ -295,6 +313,14 @@ export async function executeTool(
         return {
           result: `Order placed. Total is $${total.toFixed(2)}. Reference: ${order.id}.`,
           event: "order_taken",
+        };
+      }
+
+      case "set_language": {
+        const code = String(input.language);
+        return {
+          result: `Line switched to "${code}". Continue the conversation in that language.`,
+          language: code,
         };
       }
 

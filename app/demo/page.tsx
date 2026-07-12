@@ -24,6 +24,9 @@ export default function DemoPage() {
   const [listening, setListening] = useState(false);
   const [thinking, setThinking] = useState(false);
   const [voiceSupported, setVoiceSupported] = useState(true);
+  const [ending, setEnding] = useState(false);
+  const [insight, setInsight] = useState<string | null>(null);
+  const callIdRef = useRef<string>(`web_${Date.now().toString(36)}`);
   const recognitionRef = useRef<any>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -66,7 +69,12 @@ export default function DemoPage() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ businessId, history, message: text }),
+        body: JSON.stringify({
+          businessId,
+          history,
+          message: text,
+          callId: callIdRef.current,
+        }),
       });
       const data = await res.json();
       const reply: string =
@@ -110,7 +118,38 @@ export default function DemoPage() {
 
   function reset() {
     setTurns([]);
+    setInsight(null);
+    callIdRef.current = `web_${Date.now().toString(36)}`;
     window.speechSynthesis?.cancel();
+  }
+
+  // Hang up: triggers the same post-call intelligence a phone call gets.
+  async function endCall() {
+    if (turns.length === 0 || ending) return;
+    setEnding(true);
+    setInsight(null);
+    try {
+      const res = await fetch("/api/calls/end", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ callId: callIdRef.current }),
+      });
+      const call = await res.json();
+      if (res.ok && call.summary) {
+        setInsight(
+          `📋 ${call.summary} · sentiment: ${call.sentiment ?? "n/a"}` +
+            (call.upsellOpportunity ? ` · 💡 ${call.upsellOpportunity}` : "")
+        );
+      } else {
+        setInsight("Call saved to the dashboard.");
+      }
+    } catch {
+      setInsight("Call saved to the dashboard.");
+    } finally {
+      setEnding(false);
+      callIdRef.current = `web_${Date.now().toString(36)}`;
+      setTurns([]);
+    }
   }
 
   return (
@@ -151,10 +190,24 @@ export default function DemoPage() {
                 </option>
               ))}
             </select>
+            <button
+              onClick={endCall}
+              disabled={turns.length === 0 || ending}
+              className="btn-secondary !px-4 !py-2 text-sm disabled:opacity-40"
+              title="Hang up and run post-call analysis"
+            >
+              {ending ? "Analyzing…" : "☎️ End call"}
+            </button>
             <button onClick={reset} className="btn-secondary !px-4 !py-2 text-sm">
               Reset
             </button>
           </div>
+
+          {insight && (
+            <div className="mb-4 rounded-xl border border-brand-500/40 bg-brand-500/10 px-4 py-3 text-sm text-brand-200">
+              {insight}
+            </div>
+          )}
 
           <div className="card flex h-[420px] flex-col overflow-y-auto">
             {turns.length === 0 && (

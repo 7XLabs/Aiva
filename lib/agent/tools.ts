@@ -6,7 +6,7 @@ import {
   isSlotTaken,
   newId,
 } from "../db";
-import { findFreeSlots } from "../slots";
+import { findFreeSlots, parseBookableWindow } from "../slots";
 import { sendSms } from "../sms";
 import type { Business, Order, OrderItem } from "../types";
 
@@ -180,6 +180,15 @@ export async function executeTool(
             isError: true,
           };
         }
+        // Reject times outside opening hours.
+        const { open, close } = parseBookableWindow(business.hours);
+        const hour = Number(time.split(":")[0]) + Number(time.split(":")[1]) / 60;
+        if (hour < open || hour >= close) {
+          return {
+            result: `${time} is outside opening hours (${business.hours}). Offer a time between ${open}:00 and ${close}:00.`,
+            isError: true,
+          };
+        }
         // Re-check availability at booking time — the slot may have been
         // taken since check_availability ran (or the model skipped checking).
         if (await isSlotTaken(business.id, date, time)) {
@@ -218,7 +227,7 @@ export async function executeTool(
       }
 
       case "find_free_slots": {
-        const slots = await findFreeSlots(business.id, String(input.date));
+        const slots = await findFreeSlots(business, String(input.date));
         return {
           result: slots.length
             ? `Free slots on ${input.date}: ${slots.join(", ")}.`

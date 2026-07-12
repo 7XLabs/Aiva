@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { useDashboardData } from "@/lib/useDashboardData";
+import type { Order } from "@/lib/types";
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-amber-500/15 text-amber-300",
@@ -10,10 +12,29 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: "bg-red-500/15 text-red-300",
 };
 
+const NEXT_STATUS: Partial<Record<Order["status"], Order["status"]>> = {
+  pending: "confirmed",
+  confirmed: "ready",
+  ready: "completed",
+};
+
 export default function OrdersPage() {
   const { data } = useDashboardData();
+  const [overrides, setOverrides] = useState<Record<string, Order["status"]>>({});
+
+  async function advance(o: Order) {
+    const next = NEXT_STATUS[o.status];
+    if (!next) return;
+    setOverrides((ov) => ({ ...ov, [o.id]: next }));
+    await fetch("/api/orders", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: o.id, status: next }),
+    });
+  }
 
   const orders = (data?.orders ?? [])
+    .map((o) => (overrides[o.id] ? { ...o, status: overrides[o.id] } : o))
     .slice()
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
@@ -49,6 +70,14 @@ export default function OrdersPage() {
                 >
                   {o.status}
                 </span>
+                {NEXT_STATUS[o.status] && (
+                  <button
+                    onClick={() => advance(o)}
+                    className="rounded-lg border border-brand-500/40 px-2.5 py-1 text-xs text-brand-300 transition hover:bg-brand-500/15"
+                  >
+                    → {NEXT_STATUS[o.status]}
+                  </button>
+                )}
               </div>
             </div>
             <ul className="mt-4 space-y-1 border-t border-slate-800 pt-3 text-sm text-slate-300">

@@ -37,11 +37,32 @@ export default function CallsPage() {
               className="flex w-full items-center justify-between px-5 py-4 text-left"
               onClick={() => setOpenId(openId === c.id ? null : c.id)}
             >
-              <div>
-                <div className="text-sm font-medium">{c.callerPhone}</div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  {c.callerPhone}
+                  {c.channel === "web" && (
+                    <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-400">
+                      web demo
+                    </span>
+                  )}
+                  {c.sentiment && (
+                    <span title={`sentiment: ${c.sentiment}`}>
+                      {c.sentiment === "positive"
+                        ? "😊"
+                        : c.sentiment === "negative"
+                        ? "😠"
+                        : "😐"}
+                    </span>
+                  )}
+                </div>
                 <div className="text-xs text-slate-400">
                   {new Date(c.startedAt).toLocaleString()} · lang: {c.language}
                 </div>
+                {c.summary && (
+                  <div className="mt-1 truncate text-xs text-slate-500">
+                    {c.summary}
+                  </div>
+                )}
               </div>
               <span
                 className={`rounded-full px-3 py-1 text-xs ${
@@ -53,6 +74,16 @@ export default function CallsPage() {
             </button>
             {openId === c.id && (
               <div className="border-t border-slate-800 px-5 py-4">
+                {(c.actionItems?.length || c.upsellOpportunity) && (
+                  <div className="mb-4 space-y-2 rounded-xl bg-slate-800/40 p-3 text-xs">
+                    {c.actionItems?.map((a, i) => (
+                      <div key={i} className="text-amber-300">✅ {a}</div>
+                    ))}
+                    {c.upsellOpportunity && (
+                      <div className="text-emerald-300">💡 {c.upsellOpportunity}</div>
+                    )}
+                  </div>
+                )}
                 {c.transcript.length === 0 ? (
                   <p className="text-xs text-slate-500">No transcript.</p>
                 ) : (

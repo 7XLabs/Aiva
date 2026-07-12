@@ -42,10 +42,10 @@ export default function OnboardPage() {
               <p className="mb-3 inline-block rounded-full border border-brand-500/40 bg-brand-500/10 px-4 py-1 text-sm text-brand-300">
                 ✨ AI self-onboarding
               </p>
-              <h1 className="text-3xl font-bold md:text-4xl">
+              <h1 className="font-display text-4xl font-semibold tracking-tight md:text-5xl">
                 Describe your business.
                 <br />
-                AIVA configures itself.
+                <span className="text-gradient">AIVA configures itself.</span>
               </h1>
               <p className="mx-auto mt-3 max-w-xl text-slate-400">
                 Write a few sentences — services, prices, hours, languages.
@@ -84,8 +84,8 @@ export default function OnboardPage() {
           </>
         ) : (
           <div className="text-center">
-            <div className="text-5xl">🎉</div>
-            <h1 className="mt-4 text-3xl font-bold">
+            <div className="animate-floaty text-5xl">🎉</div>
+            <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight">
               {result.name} is live!
             </h1>
             <p className="mt-2 text-slate-400">

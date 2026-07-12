@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
+import Waveform from "@/components/Waveform";
 import type { Business } from "@/lib/types";
 
 interface Turn {
@@ -13,6 +14,10 @@ interface Turn {
 const SPEECH_LOCALES: Record<string, string> = {
   en: "en-US", hi: "hi-IN", es: "es-ES", fr: "fr-FR",
   de: "de-DE", it: "it-IT", pt: "pt-BR", ja: "ja-JP",
+};
+
+const TYPE_EMOJI: Record<string, string> = {
+  clinic: "🏥", salon: "💇", restaurant: "🍕", hotel: "🏨",
 };
 
 export default function DemoPage() {
@@ -155,15 +160,21 @@ export default function DemoPage() {
   return (
     <>
       <Navbar />
-      <main className="container-page py-10">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold">Talk to AIVA</h1>
-          <p className="mt-2 text-slate-400">
+      <main className="container-page relative py-12">
+        <div className="orb left-[-8%] top-[5%] h-80 w-80 animate-orb bg-brand-600/30" aria-hidden />
+        <div className="orb right-[-8%] bottom-[10%] h-80 w-80 animate-orb bg-purple-600/25 [animation-delay:-10s]" aria-hidden />
+
+        <div className="relative mb-10 text-center">
+          <p className="eyebrow">Live demo</p>
+          <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight md:text-5xl">
+            Talk to AIVA.
+          </h1>
+          <p className="mt-3 text-slate-400">
             Pick a business, then speak or type — AIVA handles the rest.
           </p>
         </div>
 
-        <div className="mx-auto max-w-2xl">
+        <div className="relative mx-auto max-w-2xl">
           <div className="mb-4 flex flex-wrap gap-3">
             <select
               value={businessId}
@@ -171,18 +182,18 @@ export default function DemoPage() {
                 setBusinessId(e.target.value);
                 reset();
               }}
-              className="flex-1 rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm"
+              className="min-w-52 flex-1 rounded-xl border border-slate-700/80 bg-slate-900/80 px-4 py-2.5 text-sm outline-none transition focus:border-brand-500"
             >
               {businesses.map((b) => (
                 <option key={b.id} value={b.id}>
-                  {b.name} ({b.type})
+                  {TYPE_EMOJI[b.type] ?? "📞"} {b.name}
                 </option>
               ))}
             </select>
             <select
               value={lang}
               onChange={(e) => setLang(e.target.value)}
-              className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm"
+              className="rounded-xl border border-slate-700/80 bg-slate-900/80 px-4 py-2.5 text-sm outline-none transition focus:border-brand-500"
             >
               {Object.keys(SPEECH_LOCALES).map((code) => (
                 <option key={code} value={code}>
@@ -204,83 +215,125 @@ export default function DemoPage() {
           </div>
 
           {insight && (
-            <div className="mb-4 rounded-xl border border-brand-500/40 bg-brand-500/10 px-4 py-3 text-sm text-brand-200">
+            <div className="mb-4 animate-fade-up rounded-xl border border-brand-500/40 bg-brand-500/10 px-4 py-3 text-sm leading-relaxed text-brand-200">
               {insight}
             </div>
           )}
 
-          <div className="card flex h-[420px] flex-col overflow-y-auto">
-            {turns.length === 0 && (
-              <div className="m-auto text-center text-slate-500">
-                <div className="text-4xl">📞</div>
-                <p className="mt-3 text-sm">
-                  {business
-                    ? `You're calling ${business.name}. Say hello!`
-                    : "Loading businesses…"}
-                </p>
-                <p className="mt-1 text-xs">
-                  Try: &quot;I&apos;d like to book an appointment tomorrow at 3pm&quot;
-                </p>
+          {/* phone frame */}
+          <div className="card-glow">
+            <div className="!p-0 overflow-hidden">
+              {/* call header */}
+              <div className="flex items-center justify-between border-b border-white/5 bg-white/[0.03] px-5 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-purple-500 text-lg">
+                    {business ? TYPE_EMOJI[business.type] ?? "📞" : "📞"}
+                    <span
+                      className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#0b0d17] ${
+                        turns.length > 0 ? "bg-emerald-400" : "bg-slate-500"
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold">
+                      {business?.name ?? "Loading…"}
+                    </div>
+                    <div
+                      className={`text-xs ${
+                        turns.length > 0 ? "text-emerald-400" : "text-slate-500"
+                      }`}
+                    >
+                      {thinking
+                        ? "AIVA is thinking…"
+                        : listening
+                        ? "Listening to you…"
+                        : turns.length > 0
+                        ? "● On call with AIVA"
+                        : "Ready to answer"}
+                    </div>
+                  </div>
+                </div>
+                {(thinking || listening || turns.length > 0) && <Waveform />}
               </div>
-            )}
-            {turns.map((t, i) => (
-              <div
-                key={i}
-                className={`mb-3 max-w-[85%] rounded-2xl px-4 py-2 text-sm ${
-                  t.role === "user"
-                    ? "self-end bg-brand-600 text-white"
-                    : "self-start bg-slate-800 text-slate-100"
-                }`}
-              >
-                {t.content}
-              </div>
-            ))}
-            {thinking && (
-              <div className="mb-3 self-start rounded-2xl bg-slate-800 px-4 py-2 text-sm text-slate-400">
-                AIVA is thinking…
-              </div>
-            )}
-            <div ref={bottomRef} />
-          </div>
 
-          <form
-            className="mt-4 flex gap-3"
-            onSubmit={(e) => {
-              e.preventDefault();
-              send(input);
-            }}
-          >
-            {voiceSupported && (
-              <button
-                type="button"
-                onClick={listening ? stopListening : startListening}
-                className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-xl transition ${
-                  listening
-                    ? "pulse-ring bg-red-500"
-                    : "bg-brand-500 hover:bg-brand-400"
-                }`}
-                title={listening ? "Stop listening" : "Speak"}
+              {/* transcript */}
+              <div className="flex h-[400px] flex-col gap-3 overflow-y-auto p-5">
+                {turns.length === 0 && (
+                  <div className="m-auto text-center text-slate-500">
+                    <div className="animate-floaty text-5xl">🎙️</div>
+                    <p className="mt-4 text-sm">
+                      {business
+                        ? `You're calling ${business.name}. Say hello!`
+                        : "Loading businesses…"}
+                    </p>
+                    <p className="mt-1.5 text-xs text-slate-600">
+                      Try: &quot;I&apos;d like to book an appointment tomorrow at 3pm&quot;
+                    </p>
+                  </div>
+                )}
+                {turns.map((t, i) => (
+                  <div
+                    key={i}
+                    className={`animate-fade-up max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                      t.role === "user"
+                        ? "self-end rounded-br-md bg-brand-600/90 text-white"
+                        : "self-start rounded-bl-md bg-white/[0.06] text-slate-100"
+                    }`}
+                  >
+                    {t.content}
+                  </div>
+                ))}
+                {thinking && (
+                  <div className="typing-dots flex gap-1 self-start rounded-2xl rounded-bl-md bg-white/[0.06] px-4 py-3">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                )}
+                <div ref={bottomRef} />
+              </div>
+
+              {/* composer */}
+              <form
+                className="flex gap-3 border-t border-white/5 bg-white/[0.02] p-4"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  send(input);
+                }}
               >
-                <span className="relative z-10">{listening ? "⏹" : "🎙️"}</span>
-              </button>
-            )}
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder={listening ? "Listening…" : "Or type your message…"}
-              className="flex-1 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm outline-none focus:border-brand-500"
-            />
-            <button type="submit" className="btn-primary !px-5" disabled={thinking}>
-              Send
-            </button>
-          </form>
+                {voiceSupported && (
+                  <button
+                    type="button"
+                    onClick={listening ? stopListening : startListening}
+                    className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-xl transition-all duration-300 ${
+                      listening
+                        ? "pulse-ring bg-red-500"
+                        : "bg-gradient-to-br from-brand-400 to-brand-600 hover:scale-105"
+                    }`}
+                    title={listening ? "Stop listening" : "Speak"}
+                  >
+                    <span className="relative z-10">{listening ? "⏹" : "🎙️"}</span>
+                  </button>
+                )}
+                <input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder={listening ? "Listening…" : "Or type your message…"}
+                  className="flex-1 rounded-xl border border-slate-700/80 bg-slate-950/80 px-4 py-3 text-sm outline-none transition focus:border-brand-500"
+                />
+                <button type="submit" className="btn-primary !px-5" disabled={thinking}>
+                  Send
+                </button>
+              </form>
+            </div>
+          </div>
 
           <p className="mt-6 text-center text-xs text-slate-500">
             Bookings and orders made here appear live in the{" "}
             <Link href="/dashboard" className="text-brand-400 hover:underline">
               dashboard
             </Link>
-            .
+            {" "}— hang up to see AIVA&apos;s post-call analysis.
           </p>
         </div>
       </main>

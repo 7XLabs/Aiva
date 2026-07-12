@@ -15,6 +15,17 @@ export async function POST(req: NextRequest) {
       message: string;
     };
 
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return NextResponse.json(
+        {
+          reply:
+            "AIVA isn't connected to its brain yet — add ANTHROPIC_API_KEY to .env.local and restart the server.",
+          events: [],
+        },
+        { status: 200 }
+      );
+    }
+
     if (!businessId || !message) {
       return NextResponse.json(
         { error: "businessId and message are required" },

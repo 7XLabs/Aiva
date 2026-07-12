@@ -24,11 +24,43 @@ Built for **clinics, salons, restaurants, and hotels**.
 
 ```bash
 npm install
-cp .env.example .env.local   # add your keys
+cp .env.example .env.local   # add your ANTHROPIC_API_KEY
 npm run dev
 ```
 
-Open http://localhost:3000
+Open http://localhost:3000 — then:
+
+- **/** — product landing page
+- **/demo** — talk to AIVA in your browser (mic or keyboard)
+- **/dashboard** — live calls, appointments and orders
+
+To connect a real phone number, see [DEPLOYMENT.md](DEPLOYMENT.md).
+
+## How it works
+
+1. A call hits `POST /api/voice/incoming` — AIVA greets the caller and starts listening (Twilio `<Gather>` speech recognition).
+2. Each utterance posts to `POST /api/voice/respond`, which runs a Claude conversation turn with tools: `check_availability`, `book_appointment`, `take_order`, `transfer_to_human`.
+3. Replies are spoken back with per-language Polly voices; the full transcript, outcome and any bookings/orders are persisted and shown live in the dashboard.
+
+The in-browser demo (`/demo`) uses the same agent brain through `POST /api/chat`, with the Web Speech API standing in for the phone line.
+
+## Project structure
+
+```
+app/
+  page.tsx               # landing page
+  demo/                  # in-browser voice demo
+  dashboard/             # overview, calls, appointments, orders
+  api/chat               # demo conversation endpoint
+  api/voice/incoming     # Twilio: call answered
+  api/voice/respond      # Twilio: speech → Claude → TwiML
+lib/
+  agent/                 # Claude brain: prompt, tools, loop
+  db.ts                  # JSON file store (swap for a DB in prod)
+  seed.ts                # demo businesses (clinic/salon/restaurant/hotel)
+  twiml.ts               # TwiML helpers with multilingual voices
+  languages.ts           # supported languages
+```
 
 ---
 

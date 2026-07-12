@@ -109,6 +109,19 @@ export async function isSlotTaken(
   );
 }
 
+export async function setAppointmentStatus(
+  id: string,
+  status: Appointment["status"]
+) {
+  const store = await load();
+  const appt = store.appointments.find((a) => a.id === id);
+  if (appt) {
+    appt.status = status;
+    await persist();
+  }
+  return appt;
+}
+
 // ---------- Orders ----------
 export async function getOrders(businessId?: string) {
   const store = await load();
@@ -121,6 +134,16 @@ export async function addOrder(order: Order) {
   const store = await load();
   store.orders.push(order);
   await persist();
+  return order;
+}
+
+export async function setOrderStatus(id: string, status: Order["status"]) {
+  const store = await load();
+  const order = store.orders.find((o) => o.id === id);
+  if (order) {
+    order.status = status;
+    await persist();
+  }
   return order;
 }
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getBusiness, getCall, upsertCall } from "@/lib/db";
 import { runAgentTurn, type ChatTurn } from "@/lib/agent";
+import { analyzeCall } from "@/lib/insights";
 import {
   sayAndGather,
   sayAndHangup,
@@ -80,6 +81,9 @@ export async function POST(req: NextRequest) {
     if (call) {
       call.endedAt = new Date().toISOString();
       await upsertCall(call);
+      // Post-call intelligence runs in the background; the goodbye TwiML
+      // must not wait for it.
+      void analyzeCall(business, call).catch(() => {});
     }
     return new NextResponse(sayAndHangup(reply, lang), {
       headers: xmlHeaders(),

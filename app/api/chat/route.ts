@@ -40,14 +40,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Business not found" }, { status: 404 });
     }
 
-    const result = await runAgentTurn(business, history, message);
+    const existingCall = callId ? await getCall(callId) : undefined;
+    const result = await runAgentTurn(business, history, message, {
+      language: existingCall?.language,
+    });
 
     // Log web demo conversations as calls so they get the same dashboard
     // visibility and post-call intelligence as phone calls.
     if (callId) {
       const now = new Date().toISOString();
       const call: CallLog =
-        (await getCall(callId)) ?? {
+        existingCall ?? {
           id: callId,
           businessId: business.id,
           callerPhone: "web-demo",
@@ -57,6 +60,7 @@ export async function POST(req: NextRequest) {
           outcome: "in_progress",
           transcript: [],
         };
+      if (result.language) call.language = result.language;
       call.transcript.push(
         { role: "caller", text: message, timestamp: now },
         { role: "aiva", text: result.reply, timestamp: now }

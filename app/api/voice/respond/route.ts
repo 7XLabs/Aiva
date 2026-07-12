@@ -1,0 +1,92 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getBusiness, getCall, upsertCall } from "@/lib/db";
+import { runAgentTurn, type ChatTurn } from "@/lib/agent";
+import {
+  sayAndGather,
+  sayAndHangup,
+  sayAndTransfer,
+  xmlHeaders,
+} from "@/lib/twiml";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const maxDuration = 60;
+
+const GOODBYE_MARKERS = [
+  "goodbye", "bye", "thank you, that's all", "that's all",
+  "अलविदा", "adiós", "au revoir", "auf wiedersehen",
+];
+
+// Twilio webhook: caller finished speaking; generate AIVA's reply.
+export async function POST(req: NextRequest) {
+  const form = await req.formData();
+  const callSid = String(form.get("CallSid") ?? "");
+  const speech = String(form.get("SpeechResult") ?? "").trim();
+
+  const businessId =
+    req.nextUrl.searchParams.get("businessId") ?? "biz_clinic";
+  const business = await getBusiness(businessId);
+  const call = callSid ? await getCall(callSid) : undefined;
+  const lang = call?.language ?? "en";
+  const actionUrl = `/api/voice/respond?businessId=${businessId}`;
+
+  if (!business) {
+    return new NextResponse(
+      sayAndHangup("Sorry, this line is not configured yet. Goodbye.", "en"),
+      { headers: xmlHeaders() }
+    );
+  }
+
+  // Silence: gently re-prompt.
+  if (!speech) {
+    return new NextResponse(
+      sayAndGather("Are you still there? How can I help you?", lang, actionUrl),
+      { headers: xmlHeaders() }
+    );
+  }
+
+  const history: ChatTurn[] =
+    call?.transcript.map((t) => ({
+      role: t.role === "caller" ? ("user" as const) : ("assistant" as const),
+      content: t.text,
+    })) ?? [];
+
+  const { reply, events } = await runAgentTurn(business, history, speech);
+
+  // Persist transcript + outcome.
+  if (call) {
+    const now = new Date().toISOString();
+    call.transcript.push(
+      { role: "caller", text: speech, timestamp: now },
+      { role: "aiva", text: reply, timestamp: now }
+    );
+    if (events.includes("appointment_booked")) call.outcome = "appointment_booked";
+    else if (events.includes("order_taken")) call.outcome = "order_taken";
+    else if (events.includes("transfer_requested")) call.outcome = "transferred";
+    else if (call.outcome === "in_progress") call.outcome = "faq_answered";
+    await upsertCall(call);
+  }
+
+  if (events.includes("transfer_requested")) {
+    return new NextResponse(sayAndTransfer(reply, lang, business.phone), {
+      headers: xmlHeaders(),
+    });
+  }
+
+  const callerDone = GOODBYE_MARKERS.some((m) =>
+    speech.toLowerCase().includes(m)
+  );
+  if (callerDone) {
+    if (call) {
+      call.endedAt = new Date().toISOString();
+      await upsertCall(call);
+    }
+    return new NextResponse(sayAndHangup(reply, lang), {
+      headers: xmlHeaders(),
+    });
+  }
+
+  return new NextResponse(sayAndGather(reply, lang, actionUrl), {
+    headers: xmlHeaders(),
+  });
+}

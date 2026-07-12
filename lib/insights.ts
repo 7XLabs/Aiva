@@ -15,6 +15,16 @@ const INSIGHT_SCHEMA = {
       description: "1-2 sentence summary of the call",
     },
     sentiment: { type: "string", enum: ["positive", "neutral", "negative"] },
+    intent: {
+      type: "string",
+      enum: ["booking", "order", "question", "complaint", "reschedule", "other"],
+      description: "The caller's primary intent",
+    },
+    resolved: {
+      type: "boolean",
+      description:
+        "true only if the caller's need was fully handled on this call without requiring staff follow-up",
+    },
     language: {
       type: "string",
       description: "Primary language of the caller, ISO 639-1 code",
@@ -34,6 +44,8 @@ const INSIGHT_SCHEMA = {
   required: [
     "summary",
     "sentiment",
+    "intent",
+    "resolved",
     "language",
     "action_items",
     "upsell_opportunity",
@@ -81,6 +93,8 @@ export async function analyzeCall(
     const parsed = JSON.parse(text) as {
       summary: string;
       sentiment: "positive" | "neutral" | "negative";
+      intent: NonNullable<CallLog["intent"]>;
+      resolved: boolean;
       language: string;
       action_items: string[];
       upsell_opportunity: string;
@@ -88,6 +102,8 @@ export async function analyzeCall(
 
     call.summary = parsed.summary;
     call.sentiment = parsed.sentiment;
+    call.intent = parsed.intent;
+    call.resolved = parsed.resolved;
     call.language = parsed.language || call.language;
     call.actionItems = parsed.action_items;
     call.upsellOpportunity = parsed.upsell_opportunity || undefined;

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAppointments, getBusiness } from "@/lib/db";
+import { getAppointments, getBusiness, markAppointmentReminded } from "@/lib/db";
 import { sendSms } from "@/lib/sms";
 
 export const runtime = "nodejs";
@@ -12,8 +12,10 @@ export async function POST() {
     .toISOString()
     .slice(0, 10);
 
+  // Skip appointments already reminded — running the cron twice must not
+  // text customers twice.
   const appointments = (await getAppointments()).filter(
-    (a) => a.date === tomorrow && a.status === "confirmed"
+    (a) => a.date === tomorrow && a.status === "confirmed" && !a.reminderSentAt
   );
 
   let sent = 0;
@@ -24,7 +26,10 @@ export async function POST() {
       appt.customerPhone,
       `Reminder from ${business.name}: your ${appt.serviceName} is tomorrow (${appt.date}) at ${appt.time}. Reply if you need to reschedule.`
     );
-    if (ok) sent++;
+    if (ok) {
+      await markAppointmentReminded(appt.id);
+      sent++;
+    }
   }
 
   return NextResponse.json({

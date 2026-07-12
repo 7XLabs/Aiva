@@ -109,6 +109,16 @@ export async function isSlotTaken(
   );
 }
 
+export async function markAppointmentReminded(id: string) {
+  const store = await load();
+  const appt = store.appointments.find((a) => a.id === id);
+  if (appt) {
+    appt.reminderSentAt = new Date().toISOString();
+    await persist();
+  }
+  return appt;
+}
+
 export async function setAppointmentStatus(
   id: string,
   status: Appointment["status"]

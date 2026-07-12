@@ -1,9 +1,18 @@
 import type { Business } from "../types";
 import { getLanguage } from "../languages";
 
+export interface PromptContext {
+  language?: string; // current conversation language (ISO 639-1)
+  callerContext?: string; // returning-caller memory, if any
+}
+
 // Builds the system prompt for a business. Keep the business knowledge in the
-// system prompt (stable per business) so prompt caching stays effective.
-export function buildSystemPrompt(business: Business): string {
+// system prompt (stable per business) so prompt caching stays effective;
+// per-call context (language, caller memory) goes at the end.
+export function buildSystemPrompt(
+  business: Business,
+  ctx: PromptContext = {}
+): string {
   const langs = business.languages
     .map((c) => getLanguage(c))
     .map((l) => `${l.name} (${l.nativeName})`)
@@ -60,10 +69,21 @@ ${faqs}
 
 ## Conversation rules
 - This is a VOICE call: keep every reply short — one to three sentences. Never use lists, markdown, or emojis.
-- Detect the caller's language from what they say and reply in that language. If they switch languages, switch with them.
+- If the caller speaks a different language, call set_language FIRST, then reply in that language. Keep using it until they switch again.
 - Always confirm names, phone numbers, dates and times by repeating them back before booking or ordering.
-- Use the tools to actually book, order, or check availability — never claim something is booked without calling the tool.
-- Today's date is ${new Date().toISOString().slice(0, 10)}.
-- If the caller asks something outside your knowledge, say so honestly and offer a transfer.
-- End the call warmly once the caller's needs are met.`;
+- When the caller says relative dates ("tomorrow", "next Friday"), resolve them against today's date and say the resolved date back for confirmation.
+- Use the tools to actually book, order, or check availability — never claim something is booked without a successful tool result. If a tool reports an error, fix the problem with the caller instead of pretending it worked.
+- Never invent services, prices, menu items or policies that aren't listed above.
+- Today is ${new Date().toLocaleDateString("en-US", { weekday: "long" })}, ${new Date().toISOString().slice(0, 10)}.
+- If the caller asks something outside your knowledge, say so honestly and offer a transfer or a callback (request_callback).
+- If you have failed to understand the caller twice in a row, offer to transfer to a human.
+- End the call warmly once the caller's needs are met.${
+    ctx.language && ctx.language !== "en"
+      ? `\n\n## Current language\nThe conversation is currently in "${ctx.language}". Reply in that language.`
+      : ""
+  }${
+    ctx.callerContext
+      ? `\n\n## Returning caller\nThis number has called before. ${ctx.callerContext}\nGreet them personally (use their name), don't re-ask for details you already have, and reference their history when relevant.`
+      : ""
+  }`;
 }

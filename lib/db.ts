@@ -1,0 +1,120 @@
+// Lightweight JSON file store. Zero external dependencies — perfect for a
+// demo deployment; swap for Postgres/Prisma in production.
+import { promises as fs } from "fs";
+import path from "path";
+import type { Appointment, Business, CallLog, Order } from "./types";
+import { seedBusinesses } from "./seed";
+
+const DATA_DIR = path.join(process.cwd(), "data");
+
+interface Store {
+  businesses: Business[];
+  appointments: Appointment[];
+  orders: Order[];
+  calls: CallLog[];
+}
+
+const FILE = path.join(DATA_DIR, "store.json");
+
+// In-memory cache so serverless invocations within one instance stay fast.
+let cache: Store | null = null;
+
+async function load(): Promise<Store> {
+  if (cache) return cache;
+  try {
+    const raw = await fs.readFile(FILE, "utf-8");
+    cache = JSON.parse(raw) as Store;
+  } catch {
+    cache = {
+      businesses: seedBusinesses,
+      appointments: [],
+      orders: [],
+      calls: [],
+    };
+    await persist();
+  }
+  return cache!;
+}
+
+async function persist() {
+  if (!cache) return;
+  await fs.mkdir(DATA_DIR, { recursive: true });
+  await fs.writeFile(FILE, JSON.stringify(cache, null, 2), "utf-8");
+}
+
+export function newId(prefix: string): string {
+  return `${prefix}_${Date.now().toString(36)}${Math.random()
+    .toString(36)
+    .slice(2, 8)}`;
+}
+
+// ---------- Businesses ----------
+export async function getBusinesses(): Promise<Business[]> {
+  return (await load()).businesses;
+}
+
+export async function getBusiness(id: string): Promise<Business | undefined> {
+  return (await load()).businesses.find((b) => b.id === id);
+}
+
+// ---------- Appointments ----------
+export async function getAppointments(businessId?: string) {
+  const store = await load();
+  return businessId
+    ? store.appointments.filter((a) => a.businessId === businessId)
+    : store.appointments;
+}
+
+export async function addAppointment(appt: Appointment) {
+  const store = await load();
+  store.appointments.push(appt);
+  await persist();
+  return appt;
+}
+
+export async function isSlotTaken(
+  businessId: string,
+  date: string,
+  time: string
+): Promise<boolean> {
+  const appts = await getAppointments(businessId);
+  return appts.some(
+    (a) => a.date === date && a.time === time && a.status === "confirmed"
+  );
+}
+
+// ---------- Orders ----------
+export async function getOrders(businessId?: string) {
+  const store = await load();
+  return businessId
+    ? store.orders.filter((o) => o.businessId === businessId)
+    : store.orders;
+}
+
+export async function addOrder(order: Order) {
+  const store = await load();
+  store.orders.push(order);
+  await persist();
+  return order;
+}
+
+// ---------- Call logs ----------
+export async function getCalls(businessId?: string) {
+  const store = await load();
+  return businessId
+    ? store.calls.filter((c) => c.businessId === businessId)
+    : store.calls;
+}
+
+export async function getCall(id: string) {
+  return (await load()).calls.find((c) => c.id === id);
+}
+
+export async function upsertCall(call: CallLog) {
+  const store = await load();
+  const idx = store.calls.findIndex((c) => c.id === call.id);
+  if (idx >= 0) store.calls[idx] = call;
+  else store.calls.push(call);
+  await persist();
+  return call;
+}

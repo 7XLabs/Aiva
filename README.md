@@ -7,11 +7,20 @@ Built for **clinics, salons, restaurants, and hotels**.
 ## Features
 
 - 📞 **Answers calls** — 24/7 AI receptionist over Twilio Voice
-- 📅 **Books appointments** — checks availability and confirms bookings in real time
+- 📅 **Books appointments** — checks availability, proactively suggests free slots, and confirms bookings in real time
 - ❓ **Answers FAQs** — trained on your business knowledge base
 - 🍽️ **Takes orders** — full order capture for restaurants
 - 🌍 **Multilingual** — English, Hindi, Spanish, French, German, and more
-- 📊 **Dashboard** — live view of calls, bookings, orders, and transcripts
+
+### What makes AIVA different
+
+- ✨ **AI self-onboarding** — describe your business in plain English at `/onboard`; Claude generates the entire receptionist (services, FAQs, menu, languages). No forms, no setup calls.
+- 🧠 **Post-call intelligence** — every call is auto-analyzed: summary, caller sentiment, staff action items, and **upsell opportunities** spotted in real conversations.
+- ✅ **Action item capture** — callback requests and unfinished business become a live staff task queue, never a forgotten sticky note.
+- 📈 **Analytics** — automation rate, sentiment trends, language mix, peak hours, and an upsell radar.
+- 💬 **SMS confirmations & reminders** — bookings are confirmed by text instantly; a cron-able reminder engine texts tomorrow's appointments.
+- 🛠️ **Live knowledge editing** — change services, prices or FAQs in the dashboard; AIVA knows it on the very next call.
+- 📊 **Dashboard** — live view of calls, bookings, orders, transcripts and tasks
 
 ## Tech Stack
 
@@ -31,8 +40,9 @@ npm run dev
 Open http://localhost:3000 — then:
 
 - **/** — product landing page
-- **/demo** — talk to AIVA in your browser (mic or keyboard)
-- **/dashboard** — live calls, appointments and orders
+- **/onboard** — describe your business, get a working receptionist
+- **/demo** — talk to AIVA in your browser (mic or keyboard), hang up to see post-call intelligence
+- **/dashboard** — calls, appointments, orders, action items, analytics, knowledge editor
 
 To connect a real phone number, see [DEPLOYMENT.md](DEPLOYMENT.md).
 

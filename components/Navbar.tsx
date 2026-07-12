@@ -14,6 +14,7 @@ export default function Navbar() {
           <Link href="/#features" className="hover:text-white">Features</Link>
           <Link href="/#industries" className="hover:text-white">Industries</Link>
           <Link href="/#how-it-works" className="hover:text-white">How it works</Link>
+          <Link href="/onboard" className="hover:text-white">Add your business</Link>
           <Link href="/dashboard" className="hover:text-white">Dashboard</Link>
         </nav>
         <Link href="/demo" className="btn-primary !px-4 !py-2 text-sm">

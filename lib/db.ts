@@ -2,7 +2,13 @@
 // demo deployment; swap for Postgres/Prisma in production.
 import { promises as fs } from "fs";
 import path from "path";
-import type { Appointment, Business, CallLog, Order } from "./types";
+import type {
+  ActionItem,
+  Appointment,
+  Business,
+  CallLog,
+  Order,
+} from "./types";
 import { seedBusinesses } from "./seed";
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -12,6 +18,7 @@ interface Store {
   appointments: Appointment[];
   orders: Order[];
   calls: CallLog[];
+  actionItems: ActionItem[];
 }
 
 const FILE = path.join(DATA_DIR, "store.json");
@@ -24,12 +31,15 @@ async function load(): Promise<Store> {
   try {
     const raw = await fs.readFile(FILE, "utf-8");
     cache = JSON.parse(raw) as Store;
+    // Migrate stores written by earlier versions.
+    cache.actionItems ??= [];
   } catch {
     cache = {
       businesses: seedBusinesses,
       appointments: [],
       orders: [],
       calls: [],
+      actionItems: [],
     };
     await persist();
   }
@@ -55,6 +65,22 @@ export async function getBusinesses(): Promise<Business[]> {
 
 export async function getBusiness(id: string): Promise<Business | undefined> {
   return (await load()).businesses.find((b) => b.id === id);
+}
+
+export async function addBusiness(business: Business) {
+  const store = await load();
+  store.businesses.push(business);
+  await persist();
+  return business;
+}
+
+export async function updateBusiness(business: Business) {
+  const store = await load();
+  const idx = store.businesses.findIndex((b) => b.id === business.id);
+  if (idx < 0) throw new Error(`Business not found: ${business.id}`);
+  store.businesses[idx] = business;
+  await persist();
+  return business;
 }
 
 // ---------- Appointments ----------
@@ -96,6 +122,31 @@ export async function addOrder(order: Order) {
   store.orders.push(order);
   await persist();
   return order;
+}
+
+// ---------- Action items ----------
+export async function getActionItems(businessId?: string) {
+  const store = await load();
+  return businessId
+    ? store.actionItems.filter((a) => a.businessId === businessId)
+    : store.actionItems;
+}
+
+export async function addActionItem(item: ActionItem) {
+  const store = await load();
+  store.actionItems.push(item);
+  await persist();
+  return item;
+}
+
+export async function setActionItemDone(id: string, done: boolean) {
+  const store = await load();
+  const item = store.actionItems.find((a) => a.id === id);
+  if (item) {
+    item.done = done;
+    await persist();
+  }
+  return item;
 }
 
 // ---------- Call logs ----------

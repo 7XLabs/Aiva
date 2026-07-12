@@ -145,6 +145,32 @@ export async function executeTool(
       }
 
       case "book_appointment": {
+        const date = String(input.date);
+        const time = String(input.time);
+
+        // Server-side guardrails: never trust the model to have validated.
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{1,2}:\d{2}$/.test(time)) {
+          return {
+            result: `Invalid date or time format (got date="${date}", time="${time}"). Use YYYY-MM-DD and 24h HH:mm, then try again.`,
+            isError: true,
+          };
+        }
+        const today = new Date().toISOString().slice(0, 10);
+        if (date < today) {
+          return {
+            result: `${date} is in the past (today is ${today}). Ask the caller for a future date.`,
+            isError: true,
+          };
+        }
+        // Re-check availability at booking time — the slot may have been
+        // taken since check_availability ran (or the model skipped checking).
+        if (await isSlotTaken(business.id, date, time)) {
+          return {
+            result: `The ${date} ${time} slot was just taken. Apologize and offer another time (use find_free_slots).`,
+            isError: true,
+          };
+        }
+
         const serviceName = String(input.service_name);
         const service = business.services.find(
           (s) => s.name.toLowerCase() === serviceName.toLowerCase()
@@ -201,11 +227,46 @@ export async function executeTool(
       }
 
       case "take_order": {
+        if (!business.menu?.length) {
+          return {
+            result: `${business.name} is a ${business.type} and does not take food orders. Offer to book an appointment instead.`,
+            isError: true,
+          };
+        }
         const rawItems = (input.items ?? []) as Array<{
           name: string;
           quantity: number;
           notes?: string;
         }>;
+        if (rawItems.length === 0) {
+          return { result: "The order has no items. Ask what the caller would like.", isError: true };
+        }
+        if (input.order_type === "delivery" && !input.address) {
+          return {
+            result: "Delivery orders need an address. Ask the caller for their delivery address.",
+            isError: true,
+          };
+        }
+        // Reject items that aren't on the menu instead of silently pricing
+        // them at $0 — the model must clarify with the caller.
+        const unmatched = rawItems.filter(
+          (it) =>
+            !business.menu!.some(
+              (m) => m.name.toLowerCase() === it.name.toLowerCase() && m.available
+            )
+        );
+        if (unmatched.length > 0) {
+          const menuNames = business.menu
+            .filter((m) => m.available)
+            .map((m) => m.name)
+            .join(", ");
+          return {
+            result: `These items are not on the menu: ${unmatched
+              .map((u) => u.name)
+              .join(", ")}. Available items: ${menuNames}. Clarify with the caller, then place the order again with exact menu names.`,
+            isError: true,
+          };
+        }
         const items: OrderItem[] = rawItems.map((it) => {
           const menuItem = business.menu?.find(
             (m) => m.name.toLowerCase() === it.name.toLowerCase()

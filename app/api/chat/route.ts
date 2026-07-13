@@ -2,12 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { getBusiness, getCall, upsertCall } from "@/lib/db";
 import { runAgentTurn, type ChatTurn } from "@/lib/agent";
 import type { CallLog } from "@/lib/types";
+import { clientKey, rateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // Powers the in-browser voice/chat demo.
 export async function POST(req: NextRequest) {
+  // 30 messages/min per IP keeps the demo open without inviting abuse.
+  const rl = rateLimit(clientKey(req, "chat"), 30, 60_000);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { reply: "You're sending messages very fast — give me a few seconds.", events: [] },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } }
+    );
+  }
   try {
     const body = await req.json();
     const { businessId, history = [], message, callId } = body as {

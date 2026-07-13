@@ -280,10 +280,30 @@ function AiReport() {
           {digest.recommendations.length > 0 && (
             <ReportList title="Recommendations" items={digest.recommendations} icon="→" tone="text-emerald-300" />
           )}
-          <p className="text-xs text-slate-600">
-            Based on {digest.callsAnalyzed} calls ·{" "}
-            {new Date(digest.generatedAt).toLocaleString()}
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-slate-600">
+              Based on {digest.callsAnalyzed} calls ·{" "}
+              {new Date(digest.generatedAt).toLocaleString()}
+            </p>
+            <button
+              onClick={() => {
+                const text = [
+                  digest.headline,
+                  "",
+                  "Highlights:", ...digest.highlights.map((h) => `• ${h}`),
+                  "",
+                  "What callers wanted:", ...digest.top_caller_needs.map((h) => `• ${h}`),
+                  ...(digest.risks.length ? ["", "Risks:", ...digest.risks.map((h) => `• ${h}`)] : []),
+                  "",
+                  "Recommendations:", ...digest.recommendations.map((h) => `• ${h}`),
+                ].join("\n");
+                navigator.clipboard?.writeText(text);
+              }}
+              className="text-xs text-brand-400 hover:underline"
+            >
+              📋 Copy report
+            </button>
+          </div>
         </div>
       )}
     </div>

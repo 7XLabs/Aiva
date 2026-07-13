@@ -4,6 +4,8 @@ import { sayAndGather, xmlHeaders } from "@/lib/twiml";
 import { isValidTwilioRequest } from "@/lib/twilioAuth";
 import { getCallerGreetingInfo } from "@/lib/callerMemory";
 import { getLanguage } from "@/lib/languages";
+import { sayAndHangup } from "@/lib/twiml";
+import { rateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,6 +26,21 @@ export async function POST(req: NextRequest) {
   const businesses = await getBusinesses();
   const business =
     businesses.find((b) => b.id === businessId) ?? businesses[0];
+
+  // Flood guard: a number hammering the line (robodialers, spam) gets a
+  // polite brush-off instead of burning model tokens. 6 calls / 10 min.
+  if (from !== "unknown") {
+    const rl = rateLimit(`voice:${from}`, 6, 600_000);
+    if (!rl.ok) {
+      return new NextResponse(
+        sayAndHangup(
+          "You've reached us several times in the last few minutes. Please try again a little later. Goodbye.",
+          "en"
+        ),
+        { headers: xmlHeaders() }
+      );
+    }
+  }
 
   // Returning callers get greeted by name, in the language they last spoke.
   const known = await getCallerGreetingInfo(business.id, from);

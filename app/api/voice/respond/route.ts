@@ -3,6 +3,7 @@ import { getBusiness, getCall, upsertCall } from "@/lib/db";
 import { runAgentTurn, type ChatTurn } from "@/lib/agent";
 import { analyzeCall } from "@/lib/insights";
 import { getCallerContext } from "@/lib/callerMemory";
+import { isValidTwilioRequest } from "@/lib/twilioAuth";
 import {
   sayAndGather,
   sayAndHangup,
@@ -22,6 +23,9 @@ const GOODBYE_MARKERS = [
 // Twilio webhook: caller finished speaking; generate AIVA's reply.
 export async function POST(req: NextRequest) {
   const form = await req.formData();
+  if (!isValidTwilioRequest(req, form)) {
+    return new NextResponse("invalid signature", { status: 403 });
+  }
   const callSid = String(form.get("CallSid") ?? "");
   const speech = String(form.get("SpeechResult") ?? "").trim();
 

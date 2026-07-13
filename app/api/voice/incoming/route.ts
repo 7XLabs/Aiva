@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getBusinesses, newId, upsertCall } from "@/lib/db";
 import { sayAndGather, xmlHeaders } from "@/lib/twiml";
+import { isValidTwilioRequest } from "@/lib/twilioAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,6 +11,9 @@ export const dynamic = "force-dynamic";
 //   {NEXT_PUBLIC_APP_URL}/api/voice/incoming?businessId=biz_clinic
 export async function POST(req: NextRequest) {
   const form = await req.formData();
+  if (!isValidTwilioRequest(req, form)) {
+    return new NextResponse("invalid signature", { status: 403 });
+  }
   const callSid = String(form.get("CallSid") ?? newId("call"));
   const from = String(form.get("From") ?? "unknown");
 

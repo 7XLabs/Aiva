@@ -180,6 +180,84 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {selected.menu && (
+        <div className="card mt-6">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold">Menu</h2>
+            <button
+              className="text-sm text-brand-400 hover:underline"
+              onClick={() =>
+                update({
+                  menu: [
+                    ...(selected.menu ?? []),
+                    {
+                      id: `m_${Date.now()}`,
+                      name: "New item",
+                      description: "",
+                      price: 0,
+                      category: "Mains",
+                      available: true,
+                    },
+                  ],
+                })
+              }
+            >
+              + Add item
+            </button>
+          </div>
+          <div className="mt-4 space-y-3">
+            {selected.menu.map((m, i) => (
+              <div key={m.id} className="flex flex-wrap items-center gap-3">
+                <input
+                  value={m.name}
+                  onChange={(e) => {
+                    const menu = [...selected.menu!];
+                    menu[i] = { ...m, name: e.target.value };
+                    update({ menu });
+                  }}
+                  className="min-w-40 flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                />
+                <input
+                  type="number"
+                  value={m.price}
+                  onChange={(e) => {
+                    const menu = [...selected.menu!];
+                    menu[i] = { ...m, price: Number(e.target.value) };
+                    update({ menu });
+                  }}
+                  className="w-24 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                  title="Price"
+                />
+                <button
+                  onClick={() => {
+                    const menu = [...selected.menu!];
+                    menu[i] = { ...m, available: !m.available };
+                    update({ menu });
+                  }}
+                  className={`rounded-lg border px-2.5 py-1 text-xs transition ${
+                    m.available
+                      ? "border-emerald-500/40 text-emerald-300"
+                      : "border-slate-600 text-slate-500"
+                  }`}
+                  title="Toggle availability — 86'd items are refused on calls"
+                >
+                  {m.available ? "available" : "86'd"}
+                </button>
+                <button
+                  className="text-slate-500 hover:text-red-400"
+                  onClick={() =>
+                    update({ menu: selected.menu!.filter((x) => x.id !== m.id) })
+                  }
+                  title="Remove"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="card mt-6">
         <div className="flex items-center justify-between">
           <h2 className="font-semibold">FAQs</h2>

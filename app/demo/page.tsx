@@ -74,6 +74,19 @@ export default function DemoPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [turns, thinking]);
 
+  // Escape stops the mic and any speech playback.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        recognitionRef.current?.stop();
+        setListening(false);
+        window.speechSynthesis?.cancel();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   const business = businesses.find((b) => b.id === businessId);
 
   function speakIn(text: string, langCode: string) {

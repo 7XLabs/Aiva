@@ -59,6 +59,15 @@ export default function OrdersPage() {
                 <div className="text-xs text-slate-400">
                   {new Date(o.createdAt).toLocaleString()} · {o.type}
                   {o.address ? ` · ${o.address}` : ""}
+                  {o.estimatedReadyAt && o.status === "confirmed" && (
+                    <span className="text-amber-300">
+                      {" "}· ready ~
+                      {new Date(o.estimatedReadyAt).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-3">

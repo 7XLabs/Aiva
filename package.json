@@ -1,6 +1,6 @@
 {
   "name": "aiva",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "AIVA — open-source AI voice agent & AI receptionist: answers calls 24/7, books appointments, takes orders and speaks 8+ languages. Built with Claude, Twilio and Next.js.",
   "keywords": [

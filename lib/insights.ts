@@ -57,7 +57,9 @@ export async function analyzeCall(
   business: Business,
   call: CallLog
 ): Promise<CallLog> {
-  if (!process.env.ANTHROPIC_API_KEY || call.transcript.length === 0)
+  // Idempotent: the end-call endpoint and the Twilio status callback can
+  // both fire for the same call — analyze once.
+  if (!process.env.ANTHROPIC_API_KEY || call.transcript.length === 0 || call.summary)
     return call;
 
   const transcript = call.transcript

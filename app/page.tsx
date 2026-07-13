@@ -4,6 +4,7 @@ import Footer from "@/components/Footer";
 import Reveal from "@/components/Reveal";
 import LiveCallDemo from "@/components/LiveCallDemo";
 import FaqAccordion from "@/components/FaqAccordion";
+import JsonLd from "@/components/JsonLd";
 
 const FEATURES = [
   {
@@ -117,6 +118,7 @@ const LANGS = ["English", "हिन्दी", "Español", "Français", "Deutsc
 export default function Home() {
   return (
     <>
+      <JsonLd />
       <Navbar />
       <main className="overflow-x-clip">
         {/* ---------- Hero ---------- */}

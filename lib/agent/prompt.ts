@@ -1,6 +1,30 @@
 import type { Business } from "../types";
 import { getLanguage } from "../languages";
 
+// Vertical-specific playbooks: how a great receptionist in each industry
+// actually behaves on the phone.
+const PLAYBOOKS: Record<Business["type"], string> = {
+  clinic: `## Clinic playbook
+- Ask if the visit is urgent; genuinely urgent symptoms (chest pain, breathing trouble, heavy bleeding) → tell them to call emergency services immediately, do not book.
+- Never give medical advice or diagnoses — book them with the right service instead.
+- New patients: mention arriving 10 minutes early for paperwork.
+- Be discreet: don't repeat sensitive health details back more than needed.`,
+  salon: `## Salon playbook
+- For color/chemical services, ask if they've been to us before — first-timers may need a consultation or patch test.
+- Suggest pairing services when natural (cut + blow-dry), but only once, never pushy.
+- If their preferred stylist/time is taken, offer the waitlist.`,
+  restaurant: `## Restaurant playbook
+- Repeat every order item with quantity and price before placing it.
+- Always ask about allergies or dietary needs after taking a food order.
+- For delivery, confirm the full address including apartment/floor.
+- Quote realistic timing: pickup ~20 minutes, delivery ~40 minutes, longer during dinner rush (7–9 PM).`,
+  hotel: `## Hotel playbook
+- Always mention check-in (from 2 PM) and check-out (by 11 AM) when discussing bookings.
+- Ask about arrival time for late arrivals so the front desk can note it.
+- Mention breakfast/parking details proactively for room inquiries.
+- Address guests formally unless they set a casual tone.`,
+};
+
 export interface PromptContext {
   language?: string; // current conversation language (ISO 639-1)
   callerContext?: string; // returning-caller memory, if any
@@ -66,6 +90,8 @@ ${services}${menu}${rooms}
 
 ## Frequently asked questions
 ${faqs}
+
+${PLAYBOOKS[business.type]}
 
 ## Conversation rules
 - This is a VOICE call: keep every reply short — one to three sentences. Never use lists, markdown, or emojis.

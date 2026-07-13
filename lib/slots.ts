@@ -14,7 +14,7 @@ export function parseBookableWindow(hours: string): {
   close: number;
 } {
   if (/24\s*\/\s*7|24x7|24 hours/i.test(hours)) return { open: 0, close: 24 };
-  const times = [...hours.matchAll(/(\d{1,2}):(\d{2})/g)].map(
+  const times = Array.from(hours.matchAll(/(\d{1,2}):(\d{2})/g)).map(
     (m) => Number(m[1]) + Number(m[2]) / 60
   );
   if (times.length >= 2) {

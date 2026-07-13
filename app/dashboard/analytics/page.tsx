@@ -64,6 +64,14 @@ export default function AnalyticsPage() {
     return h < 9 || h >= 18;
   }).length;
 
+  // Which weekday gets the most calls?
+  const dayCounts = countBy(
+    calls.map((c) =>
+      new Date(c.startedAt).toLocaleDateString("en-US", { weekday: "short" })
+    )
+  );
+  const busiestDay = sortedEntries(dayCounts)[0]?.[0] ?? null;
+
   // Order revenue per day (last 7 days with activity)
   const revenueByDay: Record<string, number> = {};
   for (const o of data?.orders ?? []) {
@@ -177,6 +185,12 @@ export default function AnalyticsPage() {
           <div className="mt-1 text-xs text-slate-400">
             after-hours calls a human desk would miss
           </div>
+        </div>
+        <div className="card !p-5 text-center">
+          <div className="text-3xl font-bold text-brand-300">
+            {busiestDay ?? "—"}
+          </div>
+          <div className="mt-1 text-xs text-slate-400">busiest weekday</div>
         </div>
         <div className="card col-span-2 !p-5 lg:col-span-1">
           <div className="mb-3 text-xs text-slate-400">order revenue by day</div>

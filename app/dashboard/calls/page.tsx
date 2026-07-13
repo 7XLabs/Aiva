@@ -15,10 +15,16 @@ const OUTCOME_COLORS: Record<string, string> = {
 export default function CallsPage() {
   const { data } = useDashboardData();
   const [openId, setOpenId] = useState<string | null>(null);
+  const [outcomeFilter, setOutcomeFilter] = useState<string>("all");
 
-  const calls = (data?.calls ?? [])
+  const allCalls = (data?.calls ?? [])
     .slice()
     .sort((a, b) => b.startedAt.localeCompare(a.startedAt));
+  const calls =
+    outcomeFilter === "all"
+      ? allCalls
+      : allCalls.filter((c) => c.outcome === outcomeFilter);
+  const outcomes = Array.from(new Set(allCalls.map((c) => c.outcome)));
 
   function exportCsv() {
     const esc = (s: string) => `"${s.replace(/"/g, '""')}"`;
@@ -52,13 +58,27 @@ export default function CallsPage() {
             Every conversation, fully transcribed.
           </p>
         </div>
-        <button
-          onClick={exportCsv}
-          disabled={calls.length === 0}
-          className="btn-secondary !px-4 !py-2 text-sm disabled:opacity-40"
-        >
-          ⬇ Export CSV
-        </button>
+        <div className="flex gap-2">
+          <select
+            value={outcomeFilter}
+            onChange={(e) => setOutcomeFilter(e.target.value)}
+            className="rounded-xl border border-slate-700/80 bg-slate-900/80 px-3 py-2 text-sm outline-none"
+          >
+            <option value="all">All outcomes</option>
+            {outcomes.map((o) => (
+              <option key={o} value={o}>
+                {o.replace(/_/g, " ")}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={exportCsv}
+            disabled={calls.length === 0}
+            className="btn-secondary !px-4 !py-2 text-sm disabled:opacity-40"
+          >
+            ⬇ Export CSV
+          </button>
+        </div>
       </div>
 
       <div className="mt-6 space-y-3">

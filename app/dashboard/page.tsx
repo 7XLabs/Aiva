@@ -18,6 +18,11 @@ export default function DashboardOverview() {
     },
   ];
 
+  const today = new Date().toISOString().slice(0, 10);
+  const todaysAppts = (data?.appointments ?? [])
+    .filter((a) => a.date === today && a.status === "confirmed")
+    .sort((a, b) => a.time.localeCompare(b.time));
+
   const recentCalls = (data?.calls ?? [])
     .slice()
     .sort((a, b) => b.startedAt.localeCompare(a.startedAt))
@@ -40,6 +45,27 @@ export default function DashboardOverview() {
             <div className="mt-1 text-xs text-slate-400">{s.label}</div>
           </Link>
         ))}
+      </div>
+
+      <h2 className="mt-10 text-lg font-semibold">Today&apos;s schedule</h2>
+      <div className="mt-4">
+        {todaysAppts.length === 0 ? (
+          <div className="card text-sm text-slate-400">
+            No appointments today{data ? "" : "…"}
+          </div>
+        ) : (
+          <div className="card !p-4">
+            <ol className="space-y-2 text-sm">
+              {todaysAppts.map((a) => (
+                <li key={a.id} className="flex items-center gap-4">
+                  <span className="w-14 shrink-0 font-mono text-brand-300">{a.time}</span>
+                  <span className="font-medium">{a.customerName}</span>
+                  <span className="text-slate-400">· {a.serviceName}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
       </div>
 
       <h2 className="mt-10 text-lg font-semibold">Recent calls</h2>

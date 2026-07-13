@@ -35,7 +35,10 @@ export function useDashboardData(intervalMs = 5000) {
       }
     }
     fetchData();
-    const t = setInterval(fetchData, intervalMs);
+    // Don't poll while the tab is hidden — saves requests and battery.
+    const t = setInterval(() => {
+      if (document.visibilityState === "visible") fetchData();
+    }, intervalMs);
     return () => {
       active = false;
       clearInterval(t);

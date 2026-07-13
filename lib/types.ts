@@ -82,6 +82,8 @@ export interface Order {
   address?: string;
   status: "pending" | "confirmed" | "ready" | "completed" | "cancelled";
   createdAt: string;
+  // Set when the kitchen confirms — lets AIVA quote pickup times.
+  estimatedReadyAt?: string;
 }
 
 export interface CallTranscriptTurn {

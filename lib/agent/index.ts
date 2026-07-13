@@ -99,7 +99,8 @@ export async function runAgentTurn(
         const outcome = await executeTool(
           business,
           block.name,
-          block.input as Record<string, unknown>
+          block.input as Record<string, unknown>,
+          { language: ctx.language }
         );
         if (outcome.event) events.push(outcome.event);
         if (outcome.language) {

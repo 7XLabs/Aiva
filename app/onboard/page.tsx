@@ -5,7 +5,12 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import type { Business } from "@/lib/types";
 
-const EXAMPLE = `We're "Green Leaf Dental", a small dental clinic in Pune. Open Monday to Saturday 9am to 7pm. We do checkups (₹500, 20 min), cleaning (₹1200, 40 min), root canals (₹4500, 60 min) and braces consultations. We accept walk-ins before noon. Free parking. Most patients speak English, Hindi or Marathi.`;
+const EXAMPLES: Record<string, string> = {
+  "🏥 Clinic": `We're "Green Leaf Dental", a small dental clinic in Pune. Open Monday to Saturday 9am to 7pm. We do checkups (₹500, 20 min), cleaning (₹1200, 40 min), root canals (₹4500, 60 min) and braces consultations. We accept walk-ins before noon. Free parking. Most patients speak English, Hindi or Marathi.`,
+  "🍜 Restaurant": `"Saigon Street Kitchen" — Vietnamese restaurant in Austin, open daily 11am-10pm. Pho (beef $14, chicken $13), banh mi $9, spring rolls $7, iced coffee $5. We do pickup and delivery within 4 miles, free over $25. Vegan pho available. English and Spanish speaking staff.`,
+  "💈 Salon": `"Fade Factory" barbershop in Manchester. Tuesday to Sunday, 10am to 8pm. Skin fades £22 (30 min), beard trims £12 (15 min), kids cuts £15. Walk-ins welcome weekdays, book ahead for weekends. We take card only.`,
+  "🏨 Hotel": `"Casa del Mar" — 24-room boutique hotel in Lisbon, front desk 24/7. Sea-view doubles €160/night, standard doubles €120, family suites €220. Breakfast included. Check-in 3pm, check-out noon. Airport transfers €35. Staff speak English, Portuguese, Spanish and French.`,
+};
 
 export default function OnboardPage() {
   const [description, setDescription] = useState("");
@@ -63,12 +68,17 @@ export default function OnboardPage() {
                 className="w-full resize-none rounded-xl border border-slate-700 bg-slate-950 p-4 text-sm outline-none focus:border-brand-500"
               />
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-                <button
-                  className="text-xs text-brand-400 hover:underline"
-                  onClick={() => setDescription(EXAMPLE)}
-                >
-                  Use an example description
-                </button>
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(EXAMPLES).map(([label, text]) => (
+                    <button
+                      key={label}
+                      className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-400 transition hover:border-brand-500/60 hover:text-white"
+                      onClick={() => setDescription(text)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
                 <button
                   onClick={generate}
                   disabled={loading || description.trim().length < 20}

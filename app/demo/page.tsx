@@ -20,6 +20,30 @@ const TYPE_EMOJI: Record<string, string> = {
   clinic: "🏥", salon: "💇", restaurant: "🍕", hotel: "🏨",
 };
 
+// One-tap conversation starters, tailored per business type.
+const QUICK_PROMPTS: Record<string, string[]> = {
+  clinic: [
+    "I'd like to book a checkup tomorrow at 3pm",
+    "Do you accept walk-ins?",
+    "What times are free on Friday?",
+  ],
+  salon: [
+    "Can I get a haircut this Saturday?",
+    "How much is hair coloring?",
+    "I need to reschedule my appointment",
+  ],
+  restaurant: [
+    "I'd like to order two margherita pizzas for pickup",
+    "Do you have vegan options?",
+    "Table for four tonight at 8?",
+  ],
+  hotel: [
+    "Do you have a king room this weekend?",
+    "What time is check-in?",
+    "¿Hablan español?",
+  ],
+};
+
 export default function DemoPage() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [businessId, setBusinessId] = useState("biz_clinic");
@@ -292,6 +316,21 @@ export default function DemoPage() {
                 )}
                 <div ref={bottomRef} />
               </div>
+
+              {/* quick prompts */}
+              {turns.length === 0 && business && (
+                <div className="flex flex-wrap gap-2 border-t border-white/5 px-4 pt-3">
+                  {(QUICK_PROMPTS[business.type] ?? []).map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => send(p)}
+                      className="rounded-full border border-slate-700/80 bg-slate-900/60 px-3 py-1.5 text-xs text-slate-300 transition hover:border-brand-500/60 hover:text-white"
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {/* composer */}
               <form

@@ -25,10 +25,47 @@ export default function JsonLd() {
     softwareHelp: "https://github.com/7XLabs/aiva",
   };
 
+  const faq = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "What is an AI receptionist?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "An AI receptionist is software that answers your business phone with natural conversation — booking appointments, taking orders and answering questions 24/7, without menus or hold music.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "How long does AIVA take to set up?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Minutes. Describe your business in plain English and AIVA generates its own configuration — services, FAQs, menu and languages — then point a phone number at it.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Which languages does AIVA speak?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "English, Hindi, Spanish, French, German, Italian, Portuguese and Japanese, with automatic mid-call language switching.",
+        },
+      },
+    ],
+  };
+
   return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faq) }}
+      />
+    </>
   );
 }

@@ -123,6 +123,24 @@ lib/
 - [ ] Postgres adapter
 - [ ] Outbound campaigns (reminder & win-back calls)
 
+## 📚 Documentation
+
+- [API reference](docs/API.md) — every endpoint and agent tool
+- [Architecture](docs/ARCHITECTURE.md) — how the pieces fit and why
+- [FAQ](docs/FAQ.md) — common questions
+- [Deployment](DEPLOYMENT.md) — Vercel + Twilio setup
+- [Changelog](CHANGELOG.md)
+
+## 🧪 Quality
+
+```bash
+npm test          # unit tests (agent guardrails, scheduling, TwiML, i18n)
+npm run typecheck # strict TypeScript
+npm run build     # production build
+```
+
+CI runs all three on every push.
+
 ## 🤝 Contributing
 
 PRs welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).

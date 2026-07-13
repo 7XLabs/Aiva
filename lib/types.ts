@@ -7,6 +7,8 @@ export interface Business {
   name: string;
   type: BusinessType;
   phone: string;
+  // Direct line for human transfers; falls back to `phone` when unset.
+  staffPhone?: string;
   address: string;
   hours: string;
   languages: string[];

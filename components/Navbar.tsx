@@ -4,8 +4,17 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Logo from "./Logo";
 
+const LINKS: [string, string][] = [
+  ["/#features", "Features"],
+  ["/#industries", "Industries"],
+  ["/#pricing", "Pricing"],
+  ["/onboard", "Add your business"],
+  ["/dashboard", "Dashboard"],
+];
+
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -28,13 +37,7 @@ export default function Navbar() {
           <span className="font-display tracking-tight">AIVA</span>
         </Link>
         <nav className="hidden items-center gap-8 text-sm text-slate-300 md:flex">
-          {[
-            ["/#features", "Features"],
-            ["/#industries", "Industries"],
-            ["/#pricing", "Pricing"],
-            ["/onboard", "Add your business"],
-            ["/dashboard", "Dashboard"],
-          ].map(([href, label]) => (
+          {LINKS.map(([href, label]) => (
             <Link
               key={href}
               href={href}
@@ -44,10 +47,36 @@ export default function Navbar() {
             </Link>
           ))}
         </nav>
-        <Link href="/demo" className="btn-primary !px-4 !py-2 text-sm">
-          Try the demo
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link href="/demo" className="btn-primary !px-4 !py-2 text-sm">
+            Try the demo
+          </Link>
+          <button
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-700/80 text-lg md:hidden"
+            onClick={() => setOpen((o) => !o)}
+            aria-label="Toggle menu"
+            aria-expanded={open}
+          >
+            {open ? "✕" : "☰"}
+          </button>
+        </div>
       </div>
+
+      {/* mobile menu */}
+      {open && (
+        <nav className="glass animate-fade-up border-t border-white/5 px-6 py-4 md:hidden">
+          {LINKS.map(([href, label]) => (
+            <Link
+              key={href}
+              href={href}
+              onClick={() => setOpen(false)}
+              className="block rounded-lg px-3 py-2.5 text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
+            >
+              {label}
+            </Link>
+          ))}
+        </nav>
+      )}
     </header>
   );
 }

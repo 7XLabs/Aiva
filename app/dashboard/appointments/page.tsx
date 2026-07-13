@@ -28,12 +28,38 @@ export default function AppointmentsPage() {
     .slice()
     .sort((a, b) => `${b.date}${b.time}`.localeCompare(`${a.date}${a.time}`));
 
+  function exportCsv() {
+    const esc = (s: string | number) => `"${String(s).replace(/"/g, '""')}"`;
+    const rows = [
+      ["customer", "service", "date", "time", "phone", "status"],
+      ...appts.map((a) => [a.customerName, a.serviceName, a.date, a.time, a.customerPhone, a.status]),
+    ];
+    const csv = rows.map((r) => r.map(esc).join(",")).join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    const el = document.createElement("a");
+    el.href = url;
+    el.download = `aiva-appointments-${new Date().toISOString().slice(0, 10)}.csv`;
+    el.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div>
-      <h1 className="text-2xl font-bold">Appointments</h1>
-      <p className="mt-1 text-sm text-slate-400">
-        Bookings made by AIVA on your behalf.
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">Appointments</h1>
+          <p className="mt-1 text-sm text-slate-400">
+            Bookings made by AIVA on your behalf.
+          </p>
+        </div>
+        <button
+          onClick={exportCsv}
+          disabled={appts.length === 0}
+          className="btn-secondary !px-4 !py-2 text-sm disabled:opacity-40"
+        >
+          ⬇ Export CSV
+        </button>
+      </div>
 
       <div className="mt-6 overflow-x-auto">
         <table className="w-full min-w-[640px] text-left text-sm">

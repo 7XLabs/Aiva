@@ -3,8 +3,11 @@ import {
   addActionItem,
   addAppointment,
   addOrder,
+  findAppointmentsByPhone,
   isSlotTaken,
   newId,
+  rescheduleAppointment,
+  setAppointmentStatus,
 } from "../db";
 import { findFreeSlots, parseBookableWindow } from "../slots";
 import { sendSms } from "../sms";
@@ -100,6 +103,44 @@ export const agentTools: Anthropic.Tool[] = [
     },
   },
   {
+    name: "lookup_my_appointments",
+    description:
+      "Find a caller's upcoming appointments by their phone number. Call when the caller asks about, wants to change, or wants to cancel an existing booking.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        customer_phone: { type: "string", description: "The caller's phone number" },
+      },
+      required: ["customer_phone"],
+    },
+  },
+  {
+    name: "cancel_appointment",
+    description:
+      "Cancel an existing appointment. Only call after lookup_my_appointments confirmed which appointment, and the caller explicitly confirmed the cancellation.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        appointment_id: { type: "string", description: "ID from lookup_my_appointments" },
+      },
+      required: ["appointment_id"],
+    },
+  },
+  {
+    name: "reschedule_appointment",
+    description:
+      "Move an existing appointment to a new date and time. Only call after lookup_my_appointments identified the appointment and the caller confirmed the new slot.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        appointment_id: { type: "string", description: "ID from lookup_my_appointments" },
+        new_date: { type: "string", description: "YYYY-MM-DD" },
+        new_time: { type: "string", description: "24h HH:mm" },
+      },
+      required: ["appointment_id", "new_date", "new_time"],
+    },
+  },
+  {
     name: "set_language",
     description:
       "Switch the conversation language. Call IMMEDIATELY when the caller speaks, or asks for, a different language than the current one — this retunes the phone line's voice and speech recognition. Then reply in that language.",
@@ -139,7 +180,9 @@ export interface ToolOutcome {
     | "appointment_booked"
     | "order_taken"
     | "transfer_requested"
-    | "callback_logged";
+    | "callback_logged"
+    | "appointment_cancelled"
+    | "appointment_rescheduled";
 }
 
 export async function executeTool(
@@ -322,6 +365,85 @@ export async function executeTool(
         return {
           result: `Order placed. Total is $${total.toFixed(2)}. Reference: ${order.id}.`,
           event: "order_taken",
+        };
+      }
+
+      case "lookup_my_appointments": {
+        const phone = String(input.customer_phone);
+        const today = new Date().toISOString().slice(0, 10);
+        const upcoming = (await findAppointmentsByPhone(business.id, phone))
+          .filter((a) => a.status === "confirmed" && a.date >= today)
+          .sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`));
+        if (upcoming.length === 0) {
+          return {
+            result: `No upcoming appointments found for ${phone}. Offer to book a new one.`,
+          };
+        }
+        return {
+          result: `Upcoming appointments: ${upcoming
+            .map((a) => `[id=${a.id}] ${a.serviceName} on ${a.date} at ${a.time}`)
+            .join("; ")}. Confirm with the caller which one they mean before changing anything.`,
+        };
+      }
+
+      case "cancel_appointment": {
+        const appt = await setAppointmentStatus(
+          String(input.appointment_id),
+          "cancelled"
+        );
+        if (!appt || appt.businessId !== business.id) {
+          return {
+            result: "Appointment not found. Use lookup_my_appointments first.",
+            isError: true,
+          };
+        }
+        void sendSms(
+          appt.customerPhone,
+          `${business.name}: your ${appt.serviceName} on ${appt.date} at ${appt.time} has been cancelled. Call us anytime to rebook.`
+        );
+        return {
+          result: `Cancelled ${appt.serviceName} on ${appt.date} at ${appt.time}. The ${appt.time} slot is now free.`,
+          event: "appointment_cancelled",
+        };
+      }
+
+      case "reschedule_appointment": {
+        const newDate = String(input.new_date);
+        const newTime = String(input.new_time);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(newDate) || !/^\d{1,2}:\d{2}$/.test(newTime)) {
+          return {
+            result: "Invalid new date/time format. Use YYYY-MM-DD and 24h HH:mm.",
+            isError: true,
+          };
+        }
+        const todayStr = new Date().toISOString().slice(0, 10);
+        if (newDate < todayStr) {
+          return { result: `${newDate} is in the past. Ask for a future date.`, isError: true };
+        }
+        if (await isSlotTaken(business.id, newDate, newTime)) {
+          return {
+            result: `${newDate} ${newTime} is already taken. Use find_free_slots and offer alternatives.`,
+            isError: true,
+          };
+        }
+        const moved = await rescheduleAppointment(
+          String(input.appointment_id),
+          newDate,
+          newTime
+        );
+        if (!moved || moved.businessId !== business.id) {
+          return {
+            result: "Appointment not found. Use lookup_my_appointments first.",
+            isError: true,
+          };
+        }
+        void sendSms(
+          moved.customerPhone,
+          `${business.name}: your ${moved.serviceName} has been moved to ${newDate} at ${newTime}. Ref ${moved.id}.`
+        );
+        return {
+          result: `Rescheduled to ${newDate} at ${newTime} and SMS confirmation sent.`,
+          event: "appointment_rescheduled",
         };
       }
 

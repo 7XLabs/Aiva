@@ -8,6 +8,7 @@ import type {
   Business,
   CallLog,
   Order,
+  WaitlistEntry,
 } from "./types";
 import { seedBusinesses } from "./seed";
 
@@ -19,6 +20,7 @@ interface Store {
   orders: Order[];
   calls: CallLog[];
   actionItems: ActionItem[];
+  waitlist: WaitlistEntry[];
 }
 
 const FILE = path.join(DATA_DIR, "store.json");
@@ -33,6 +35,7 @@ async function load(): Promise<Store> {
     cache = JSON.parse(raw) as Store;
     // Migrate stores written by earlier versions.
     cache.actionItems ??= [];
+    cache.waitlist ??= [];
   } catch {
     cache = {
       businesses: seedBusinesses,
@@ -40,6 +43,7 @@ async function load(): Promise<Store> {
       orders: [],
       calls: [],
       actionItems: [],
+      waitlist: [],
     };
     await persist();
   }
@@ -204,6 +208,43 @@ export async function setActionItemDone(id: string, done: boolean) {
     await persist();
   }
   return item;
+}
+
+// ---------- Waitlist ----------
+export async function getWaitlist(businessId?: string) {
+  const store = await load();
+  return businessId
+    ? store.waitlist.filter((w) => w.businessId === businessId)
+    : store.waitlist;
+}
+
+export async function addWaitlistEntry(entry: WaitlistEntry) {
+  const store = await load();
+  store.waitlist.push(entry);
+  await persist();
+  return entry;
+}
+
+export async function setWaitlistStatus(
+  id: string,
+  status: WaitlistEntry["status"]
+) {
+  const store = await load();
+  const entry = store.waitlist.find((w) => w.id === id);
+  if (entry) {
+    entry.status = status;
+    if (status === "notified") entry.notifiedAt = new Date().toISOString();
+    await persist();
+  }
+  return entry;
+}
+
+// The first caller waiting for this date, if any.
+export async function nextWaitingFor(businessId: string, date: string) {
+  const store = await load();
+  return store.waitlist.find(
+    (w) => w.businessId === businessId && w.date === date && w.status === "waiting"
+  );
 }
 
 // ---------- Call logs ----------

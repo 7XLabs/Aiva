@@ -76,10 +76,10 @@ export default function DemoPage() {
 
   const business = businesses.find((b) => b.id === businessId);
 
-  function speak(text: string) {
+  function speakIn(text: string, langCode: string) {
     try {
       const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = SPEECH_LOCALES[lang] ?? "en-US";
+      utter.lang = SPEECH_LOCALES[langCode] ?? "en-US";
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(utter);
     } catch {
@@ -108,8 +108,10 @@ export default function DemoPage() {
       const data = await res.json();
       const reply: string =
         data.reply ?? "Sorry, something went wrong. Please try again.";
+      // Follow the agent's language switch so browser TTS/STT match.
+      if (data.language && SPEECH_LOCALES[data.language]) setLang(data.language);
       setTurns((t) => [...t, { role: "assistant", content: reply }]);
-      speak(reply);
+      speakIn(reply, data.language ?? lang);
     } catch {
       setTurns((t) => [
         ...t,

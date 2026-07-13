@@ -79,6 +79,11 @@ export default function SettingsPage() {
           <Field label="Hours" value={selected.hours} onChange={(v) => update({ hours: v })} />
           <Field label="Phone" value={selected.phone} onChange={(v) => update({ phone: v })} />
           <Field label="Address" value={selected.address} onChange={(v) => update({ address: v })} />
+          <Field
+            label="Staff transfer number (optional)"
+            value={selected.staffPhone ?? ""}
+            onChange={(v) => update({ staffPhone: v || undefined })}
+          />
         </div>
       </div>
 

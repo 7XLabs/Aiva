@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { addBusiness } from "@/lib/db";
 import { generateBusiness } from "@/lib/onboard";
+import { clientKey, rateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -8,6 +9,14 @@ export const maxDuration = 60;
 
 // AI self-onboarding: description in, ready-to-call AI receptionist out.
 export async function POST(req: NextRequest) {
+  // Onboarding generation is expensive — 5 per 10 minutes per IP.
+  const rl = rateLimit(clientKey(req, "onboard"), 5, 600_000);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: `Too many generations — try again in ${rl.retryAfterSec}s.` },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } }
+    );
+  }
   if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json(
       { error: "ANTHROPIC_API_KEY is not configured on the server." },

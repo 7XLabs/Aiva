@@ -88,6 +88,34 @@ export default function SettingsPage() {
       </div>
 
       <div className="card mt-6">
+        <h2 className="font-semibold">Languages AIVA answers in</h2>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {["en", "hi", "es", "fr", "de", "it", "pt", "ja"].map((code) => {
+            const active = selected.languages.includes(code);
+            return (
+              <button
+                key={code}
+                onClick={() =>
+                  update({
+                    languages: active
+                      ? selected.languages.filter((l) => l !== code)
+                      : [...selected.languages, code],
+                  })
+                }
+                className={`rounded-full border px-4 py-1.5 text-sm uppercase transition ${
+                  active
+                    ? "border-brand-500/60 bg-brand-500/20 text-brand-200"
+                    : "border-slate-700 text-slate-400 hover:border-slate-500"
+                }`}
+              >
+                {code}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="card mt-6">
         <div className="flex items-center justify-between">
           <h2 className="font-semibold">Services</h2>
           <button

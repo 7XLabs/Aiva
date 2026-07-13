@@ -86,9 +86,10 @@ export async function POST(req: NextRequest) {
   }
 
   if (events.includes("transfer_requested")) {
-    return new NextResponse(sayAndTransfer(reply, replyLang, business.phone), {
-      headers: xmlHeaders(),
-    });
+    return new NextResponse(
+      sayAndTransfer(reply, replyLang, business.staffPhone ?? business.phone),
+      { headers: xmlHeaders() }
+    );
   }
 
   const callerDone = GOODBYE_MARKERS.some((m) =>

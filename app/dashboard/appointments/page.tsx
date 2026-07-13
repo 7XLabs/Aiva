@@ -73,8 +73,16 @@ export default function AppointmentsPage() {
                   </span>
                 </td>
                 <td className="py-3">
+                  <div className="flex gap-2">
+                  <a
+                    href={`/api/appointments/${a.id}/ics`}
+                    className="rounded-lg border border-slate-600/60 px-2.5 py-1 text-xs text-slate-300 transition hover:bg-slate-700/40"
+                    title="Add to calendar (.ics)"
+                  >
+                    📅 .ics
+                  </a>
                   {a.status === "confirmed" && (
-                    <div className="flex gap-2">
+                    <>
                       <button
                         onClick={() => setStatus(a.id, "completed")}
                         className="rounded-lg border border-emerald-500/30 px-2.5 py-1 text-xs text-emerald-300 transition hover:bg-emerald-500/15"
@@ -87,8 +95,9 @@ export default function AppointmentsPage() {
                       >
                         Cancel
                       </button>
-                    </div>
+                    </>
                   )}
+                  </div>
                 </td>
               </tr>
             ))}

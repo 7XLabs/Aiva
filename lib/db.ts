@@ -109,6 +109,30 @@ export async function isSlotTaken(
   );
 }
 
+export async function findAppointmentsByPhone(
+  businessId: string,
+  customerPhone: string
+) {
+  const appts = await getAppointments(businessId);
+  return appts.filter((a) => a.customerPhone === customerPhone);
+}
+
+export async function rescheduleAppointment(
+  id: string,
+  date: string,
+  time: string
+) {
+  const store = await load();
+  const appt = store.appointments.find((a) => a.id === id);
+  if (appt) {
+    appt.date = date;
+    appt.time = time;
+    appt.reminderSentAt = undefined; // new slot ⇒ new reminder
+    await persist();
+  }
+  return appt;
+}
+
 export async function markAppointmentReminded(id: string) {
   const store = await load();
   const appt = store.appointments.find((a) => a.id === id);

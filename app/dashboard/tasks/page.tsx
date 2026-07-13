@@ -1,15 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { ActionItem } from "@/lib/types";
+import type { ActionItem, WaitlistEntry } from "@/lib/types";
+
+const WAIT_COLORS: Record<string, string> = {
+  waiting: "bg-amber-500/15 text-amber-300",
+  notified: "bg-sky-500/15 text-sky-300",
+  booked: "bg-emerald-500/15 text-emerald-300",
+  expired: "bg-slate-500/15 text-slate-400",
+};
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<ActionItem[]>([]);
+  const [waitlist, setWaitlist] = useState<WaitlistEntry[]>([]);
 
   async function refresh() {
     try {
-      const res = await fetch("/api/tasks");
-      setTasks(await res.json());
+      const [t, w] = await Promise.all([
+        fetch("/api/tasks").then((r) => r.json()),
+        fetch("/api/waitlist").then((r) => r.json()),
+      ]);
+      setTasks(t);
+      setWaitlist(w);
     } catch {}
   }
 
@@ -46,6 +58,40 @@ export default function TasksPage() {
           <div className="card text-sm text-slate-400">
             Nothing here yet. Ask AIVA for a callback in the demo and watch this
             list fill up.
+          </div>
+        )}
+        {waitlist.length > 0 && (
+          <div className="card">
+            <h2 className="font-semibold">⏳ Waitlist</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Callers waiting for a slot to open. AIVA texts them automatically
+              when a cancellation frees one.
+            </p>
+            <ul className="mt-3 space-y-2 text-sm">
+              {waitlist
+                .slice()
+                .sort((a, b) => a.date.localeCompare(b.date))
+                .map((w) => (
+                  <li
+                    key={w.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-slate-800/40 px-4 py-2.5"
+                  >
+                    <span>
+                      <span className="font-medium">{w.customerName}</span>
+                      <span className="text-slate-400">
+                        {" "}· {w.serviceName} · wants {w.date} · {w.customerPhone}
+                      </span>
+                    </span>
+                    <span
+                      className={`rounded-full px-2.5 py-0.5 text-xs ${
+                        WAIT_COLORS[w.status] ?? ""
+                      }`}
+                    >
+                      {w.status}
+                    </span>
+                  </li>
+                ))}
+            </ul>
           </div>
         )}
         {[...open, ...done].map((t) => (

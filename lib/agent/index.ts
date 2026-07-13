@@ -75,6 +75,14 @@ export async function runAgentTurn(
       // The SDK already retried 429/5xx twice; whatever is left is not
       // recoverable inside a live call — degrade gracefully.
       console.error("agent turn failed", err);
+      if (err instanceof Anthropic.AuthenticationError) {
+        return {
+          reply:
+            "Configuration issue: the Anthropic API key is invalid. Check ANTHROPIC_API_KEY in .env.local and restart the server.",
+          events: [],
+          language,
+        };
+      }
       if (
         err instanceof Anthropic.RateLimitError ||
         err instanceof Anthropic.InternalServerError ||

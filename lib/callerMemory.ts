@@ -2,6 +2,27 @@
 // the agent their history, so AIVA greets them personally and books faster.
 import { getAppointments, getCalls, getOrders } from "./db";
 
+// Quick facts for the greeting: caller's name and last-used language.
+export async function getCallerGreetingInfo(
+  businessId: string,
+  callerPhone: string
+): Promise<{ name?: string; language?: string }> {
+  if (!callerPhone || callerPhone === "unknown" || callerPhone === "web-demo")
+    return {};
+  const [appts, orders, calls] = await Promise.all([
+    getAppointments(businessId),
+    getOrders(businessId),
+    getCalls(businessId),
+  ]);
+  const name =
+    appts.find((a) => a.customerPhone === callerPhone)?.customerName ??
+    orders.find((o) => o.customerPhone === callerPhone)?.customerName;
+  const language = calls
+    .filter((c) => c.callerPhone === callerPhone && c.endedAt)
+    .sort((a, b) => b.startedAt.localeCompare(a.startedAt))[0]?.language;
+  return { name, language };
+}
+
 export async function getCallerContext(
   businessId: string,
   callerPhone: string

@@ -113,6 +113,20 @@ export interface CallLog {
   upsellOpportunity?: string;
 }
 
+// A caller waiting for a slot to open up on a full day. When a cancellation
+// frees a slot, the first matching entry is notified by SMS automatically.
+export interface WaitlistEntry {
+  id: string;
+  businessId: string;
+  customerName: string;
+  customerPhone: string;
+  serviceName: string;
+  date: string; // YYYY-MM-DD they want
+  status: "waiting" | "notified" | "booked" | "expired";
+  createdAt: string;
+  notifiedAt?: string;
+}
+
 // A follow-up task for staff, created by AIVA (callback requests,
 // unresolved questions, post-call action items).
 export interface ActionItem {

@@ -14,10 +14,39 @@ const fraunces = Fraunces({
   display: "swap",
 });
 
+const BASE = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+
 export const metadata: Metadata = {
-  title: "AIVA — AI Voice Agent | Your 24/7 AI Receptionist",
+  metadataBase: new URL(BASE),
+  title: {
+    default: "AIVA — AI Voice Agent | Your 24/7 AI Receptionist",
+    template: "%s | AIVA",
+  },
   description:
-    "AIVA answers calls, books appointments, answers FAQs and takes orders in multiple languages. Built for clinics, salons, restaurants and hotels.",
+    "Open-source AI receptionist that answers calls 24/7, books appointments, takes orders and speaks 8+ languages. Built for clinics, salons, restaurants and hotels.",
+  keywords: [
+    "AI receptionist",
+    "AI voice agent",
+    "answering service",
+    "virtual receptionist",
+    "appointment booking AI",
+    "phone order automation",
+    "multilingual voice assistant",
+  ],
+  openGraph: {
+    title: "AIVA — AI Voice Agent | Your 24/7 AI Receptionist",
+    description:
+      "Never miss another call. AIVA answers, books, orders and speaks your customer's language — around the clock.",
+    url: BASE,
+    siteName: "AIVA",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AIVA — AI Voice Agent",
+    description:
+      "The AI receptionist that answers every call, in every language, around the clock.",
+  },
 };
 
 export default function RootLayout({

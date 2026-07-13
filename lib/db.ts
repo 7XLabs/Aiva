@@ -180,6 +180,12 @@ export async function setOrderStatus(id: string, status: Order["status"]) {
   const order = store.orders.find((o) => o.id === id);
   if (order) {
     order.status = status;
+    // Kitchen confirmed → estimate readiness; done → clear the estimate.
+    if (status === "confirmed") {
+      order.estimatedReadyAt = new Date(Date.now() + 20 * 60_000).toISOString();
+    } else if (status === "completed" || status === "cancelled") {
+      order.estimatedReadyAt = undefined;
+    }
     await persist();
   }
   return order;

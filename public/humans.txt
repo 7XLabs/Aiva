@@ -1,0 +1,8 @@
+/* TEAM */
+Builder: Dipak Chaudhari
+Org: 7XLabs
+Site: https://github.com/7XLabs/aiva
+
+/* SITE */
+Stack: Next.js 14, TypeScript, Tailwind CSS, Claude (Anthropic), Twilio Voice
+Standards: HTML5, CSS3, ES2022

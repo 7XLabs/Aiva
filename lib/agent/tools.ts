@@ -3,11 +3,14 @@ import {
   addActionItem,
   addAppointment,
   addOrder,
+  addWaitlistEntry,
   findAppointmentsByPhone,
   isSlotTaken,
   newId,
+  nextWaitingFor,
   rescheduleAppointment,
   setAppointmentStatus,
+  setWaitlistStatus,
 } from "../db";
 import { findFreeSlots, parseBookableWindow } from "../slots";
 import { sendSms } from "../sms";
@@ -100,6 +103,21 @@ export const agentTools: Anthropic.Tool[] = [
         customer_phone: { type: "string" },
       },
       required: ["summary"],
+    },
+  },
+  {
+    name: "join_waitlist",
+    description:
+      "Put the caller on the waitlist for a fully-booked date. Offer this when find_free_slots returns nothing for the caller's preferred date and they don't want another day. They'll be texted automatically if a slot opens.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        customer_name: { type: "string" },
+        customer_phone: { type: "string" },
+        service_name: { type: "string" },
+        date: { type: "string", description: "YYYY-MM-DD they want" },
+      },
+      required: ["customer_name", "customer_phone", "service_name", "date"],
     },
   },
   {
@@ -368,6 +386,22 @@ export async function executeTool(
         };
       }
 
+      case "join_waitlist": {
+        const entry = await addWaitlistEntry({
+          id: newId("wait"),
+          businessId: business.id,
+          customerName: String(input.customer_name),
+          customerPhone: String(input.customer_phone),
+          serviceName: String(input.service_name),
+          date: String(input.date),
+          status: "waiting",
+          createdAt: new Date().toISOString(),
+        });
+        return {
+          result: `Added to the waitlist for ${entry.date}. Tell the caller they'll get a text automatically if a slot opens up.`,
+        };
+      }
+
       case "lookup_my_appointments": {
         const phone = String(input.customer_phone);
         const today = new Date().toISOString().slice(0, 10);
@@ -401,8 +435,19 @@ export async function executeTool(
           appt.customerPhone,
           `${business.name}: your ${appt.serviceName} on ${appt.date} at ${appt.time} has been cancelled. Call us anytime to rebook.`
         );
+        // A slot just opened — text the first caller waiting for that date.
+        const waiting = await nextWaitingFor(business.id, appt.date);
+        if (waiting) {
+          await setWaitlistStatus(waiting.id, "notified");
+          void sendSms(
+            waiting.customerPhone,
+            `Good news from ${business.name}! A slot just opened on ${appt.date} at ${appt.time}. Call us to grab it — first come, first served.`
+          );
+        }
         return {
-          result: `Cancelled ${appt.serviceName} on ${appt.date} at ${appt.time}. The ${appt.time} slot is now free.`,
+          result: `Cancelled ${appt.serviceName} on ${appt.date} at ${appt.time}. The ${appt.time} slot is now free.${
+            waiting ? " A waitlisted caller has been notified by SMS." : ""
+          }`,
           event: "appointment_cancelled",
         };
       }

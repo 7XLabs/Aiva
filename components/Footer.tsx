@@ -26,6 +26,9 @@ const COLUMNS: { title: string; links: [string, string][] }[] = [
       ["/dashboard", "Dashboard"],
       ["/dashboard/analytics", "Analytics"],
       ["https://github.com/7XLabs/aiva", "GitHub"],
+      ["https://github.com/7XLabs/aiva/blob/main/docs/API.md", "API docs"],
+      ["https://github.com/7XLabs/aiva/blob/main/docs/ARCHITECTURE.md", "Architecture"],
+      ["https://github.com/7XLabs/aiva/blob/main/docs/FAQ.md", "FAQ"],
     ],
   },
 ];

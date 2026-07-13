@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+  robots: { index: false },
+};
 import Sidebar from "@/components/Sidebar";
 import { BusinessProvider, BusinessSelect } from "@/components/BusinessFilter";
 

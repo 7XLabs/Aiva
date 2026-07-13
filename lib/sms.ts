@@ -9,7 +9,17 @@ function getClient() {
   return twilio(sid, token);
 }
 
-export async function sendSms(to: string, body: string): Promise<boolean> {
+// Best-effort E.164 normalization so "555 010 1001" style numbers from
+// speech transcription still deliver.
+export function normalizePhone(raw: string): string {
+  const cleaned = raw.replace(/[^\d+]/g, "");
+  if (cleaned.startsWith("+")) return cleaned;
+  if (cleaned.length === 10) return `+1${cleaned}`; // NANP default
+  return `+${cleaned}`;
+}
+
+export async function sendSms(rawTo: string, body: string): Promise<boolean> {
+  const to = normalizePhone(rawTo);
   const client = getClient();
   if (!client) {
     console.log(`[sms skipped — no Twilio creds] to=${to}: ${body}`);

@@ -2,7 +2,27 @@
   "name": "aiva",
   "version": "0.1.0",
   "private": true,
-  "description": "AIVA — AI Voice Agent: an AI receptionist for clinics, salons, restaurants and hotels",
+  "description": "AIVA — open-source AI voice agent & AI receptionist: answers calls 24/7, books appointments, takes orders and speaks 8+ languages. Built with Claude, Twilio and Next.js.",
+  "keywords": [
+    "ai-receptionist",
+    "voice-agent",
+    "ai-voice-agent",
+    "answering-service",
+    "virtual-receptionist",
+    "appointment-booking",
+    "twilio-voice",
+    "claude",
+    "anthropic",
+    "conversational-ai",
+    "ivr-replacement",
+    "phone-bot",
+    "nextjs"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/7XLabs/aiva.git"
+  },
+  "license": "MIT",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

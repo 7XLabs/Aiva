@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useDashboardData } from "@/lib/useDashboardData";
+import { callDuration, relativeTime } from "@/lib/format";
 
 const OUTCOME_COLORS: Record<string, string> = {
   appointment_booked: "bg-emerald-500/15 text-emerald-300",
@@ -110,7 +111,10 @@ export default function CallsPage() {
                   )}
                 </div>
                 <div className="text-xs text-slate-400">
-                  {new Date(c.startedAt).toLocaleString()} · lang: {c.language}
+                  {relativeTime(c.startedAt)} · lang: {c.language}
+                  {callDuration(c.startedAt, c.endedAt)
+                    ? ` · ${callDuration(c.startedAt, c.endedAt)}`
+                    : ""}
                 </div>
                 {c.summary && (
                   <div className="mt-1 truncate text-xs text-slate-500">

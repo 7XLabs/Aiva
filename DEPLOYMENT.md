@@ -32,7 +32,19 @@ https://YOUR_DOMAIN/api/voice/incoming?businessId=biz_clinic
 
 Method: `HTTP POST`.
 
-3. Call the number. AIVA answers.
+3. Under **Call status changes**, set:
+
+```
+https://YOUR_DOMAIN/api/voice/status
+```
+
+This finalizes calls when callers hang up without saying goodbye, so every
+call gets transcript analysis.
+
+4. Call the number. AIVA answers.
+
+> With `TWILIO_AUTH_TOKEN` set, all voice webhooks validate the
+> `X-Twilio-Signature` header — requests not signed by Twilio get a 403.
 
 Each business gets its own number by pointing the webhook at its `businessId`.
 

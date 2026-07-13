@@ -49,6 +49,32 @@ export default function AnalyticsPage() {
     calls.map((c) => `${String(new Date(c.startedAt).getHours()).padStart(2, "0")}:00`)
   );
 
+  // Average call duration (only calls that ended)
+  const durations = calls
+    .filter((c) => c.endedAt)
+    .map((c) => (new Date(c.endedAt!).getTime() - new Date(c.startedAt).getTime()) / 1000)
+    .filter((s) => s > 0 && s < 3600);
+  const avgDuration = durations.length
+    ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)
+    : null;
+
+  // Calls outside 9–18 — the ones a human front desk would have missed.
+  const afterHours = calls.filter((c) => {
+    const h = new Date(c.startedAt).getHours();
+    return h < 9 || h >= 18;
+  }).length;
+
+  // Order revenue per day (last 7 days with activity)
+  const revenueByDay: Record<string, number> = {};
+  for (const o of data?.orders ?? []) {
+    const day = o.createdAt.slice(0, 10);
+    revenueByDay[day] = (revenueByDay[day] ?? 0) + o.total;
+  }
+  const revenueDays = Object.entries(revenueByDay)
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .slice(-7);
+  const maxRevenue = Math.max(0, ...revenueDays.map(([, v]) => v));
+
   const resolvedByAI = calls.filter((c) => c.outcome !== "transferred" && c.outcome !== "missed").length;
   const automationRate = calls.length
     ? Math.round((resolvedByAI / calls.length) * 100)
@@ -135,6 +161,41 @@ export default function AnalyticsPage() {
             <Bar key={k} label={k} value={v} max={maxOf(byHour)} color="bg-amber-500" />
           ))}
         </ChartCard>
+      </div>
+
+      <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
+        <div className="card !p-5 text-center">
+          <div className="text-3xl font-bold text-sky-400">
+            {avgDuration === null
+              ? "—"
+              : `${Math.floor(avgDuration / 60)}m ${avgDuration % 60}s`}
+          </div>
+          <div className="mt-1 text-xs text-slate-400">avg call duration</div>
+        </div>
+        <div className="card !p-5 text-center">
+          <div className="text-3xl font-bold text-rose-400">{afterHours}</div>
+          <div className="mt-1 text-xs text-slate-400">
+            after-hours calls a human desk would miss
+          </div>
+        </div>
+        <div className="card col-span-2 !p-5 lg:col-span-1">
+          <div className="mb-3 text-xs text-slate-400">order revenue by day</div>
+          {revenueDays.length === 0 ? (
+            <p className="text-sm text-slate-500">No orders yet.</p>
+          ) : (
+            <div className="flex h-20 items-end gap-2">
+              {revenueDays.map(([day, v]) => (
+                <div key={day} className="flex flex-1 flex-col items-center gap-1" title={`${day}: $${v.toFixed(2)}`}>
+                  <div
+                    className="w-full rounded-t bg-gradient-to-t from-emerald-600 to-emerald-400"
+                    style={{ height: `${maxRevenue ? Math.max(8, (v / maxRevenue) * 100) : 8}%` }}
+                  />
+                  <span className="text-[10px] text-slate-500">{day.slice(5)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <AiReport />

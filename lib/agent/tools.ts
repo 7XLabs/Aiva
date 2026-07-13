@@ -14,6 +14,7 @@ import {
 } from "../db";
 import { findFreeSlots, parseBookableWindow } from "../slots";
 import { sendSms } from "../sms";
+import { bookingConfirmationSms } from "../smsTemplates";
 import type { Business, Order, OrderItem } from "../types";
 
 // Tool definitions passed to Claude. Descriptions are prescriptive about WHEN
@@ -203,10 +204,15 @@ export interface ToolOutcome {
     | "appointment_rescheduled";
 }
 
+export interface ToolContext {
+  language?: string; // current conversation language for localized SMS
+}
+
 export async function executeTool(
   business: Business,
   name: string,
-  input: Record<string, unknown>
+  input: Record<string, unknown>,
+  ctx: ToolContext = {}
 ): Promise<ToolOutcome> {
   try {
     switch (name) {
@@ -276,10 +282,16 @@ export async function executeTool(
           notes: input.notes ? String(input.notes) : undefined,
           createdAt: new Date().toISOString(),
         });
-        // Fire-and-forget SMS confirmation (no-op without Twilio creds).
+        // Fire-and-forget SMS confirmation in the caller's language.
         void sendSms(
           appt.customerPhone,
-          `${business.name}: your ${appt.serviceName} is confirmed for ${appt.date} at ${appt.time}. Ref ${appt.id}. Reply to this number to reschedule.`
+          bookingConfirmationSms(ctx.language ?? "en", {
+            business: business.name,
+            service: appt.serviceName,
+            date: appt.date,
+            time: appt.time,
+            ref: appt.id,
+          })
         );
         return {
           result: `Appointment confirmed and SMS confirmation sent. Reference: ${appt.id}.`,

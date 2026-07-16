@@ -6,7 +6,7 @@ const COLUMNS: { title: string; links: [string, string][] }[] = [
     title: "Product",
     links: [
       ["/#features", "Features"],
-      ["/#pricing", "Pricing"],
+      ["/#open-source", "Open source"],
       ["/demo", "Live demo"],
       ["/onboard", "AI onboarding"],
     ],

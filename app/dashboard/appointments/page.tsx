@@ -84,7 +84,17 @@ export default function AppointmentsPage() {
             )}
             {appts.map((a) => (
               <tr key={a.id} className="border-b border-slate-800/60">
-                <td className="py-3 pr-4 font-medium">{a.customerName}</td>
+                <td className="py-3 pr-4 font-medium">
+                  {a.customerName}
+                  {a.recurrence && (
+                    <span
+                      className="ml-1.5 text-brand-400"
+                      title={`Standing booking (${a.recurrence})`}
+                    >
+                      🔁
+                    </span>
+                  )}
+                </td>
                 <td className="py-3 pr-4 text-slate-300">{a.serviceName}</td>
                 <td className="py-3 pr-4 text-slate-300">{a.date}</td>
                 <td className="py-3 pr-4 text-slate-300">{a.time}</td>

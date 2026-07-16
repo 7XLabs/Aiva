@@ -12,7 +12,7 @@ import {
   setAppointmentStatus,
   setWaitlistStatus,
 } from "../db";
-import { findFreeSlots, parseBookableWindow } from "../slots";
+import { findFreeSlots, isClosedOn, parseBookableWindow } from "../slots";
 import { sendSms } from "../sms";
 import { bookingConfirmationSms } from "../smsTemplates";
 import type { Business, Order, OrderItem } from "../types";
@@ -247,6 +247,15 @@ export async function executeTool(
             isError: true,
           };
         }
+        // Reject days the business is closed (weekday closures + holidays).
+        if (isClosedOn(business, date)) {
+          return {
+            result: `${business.name} is closed on ${date} (hours: ${business.hours}${
+              business.holidays?.includes(date) ? "; marked as a holiday" : ""
+            }). Offer the next open day instead.`,
+            isError: true,
+          };
+        }
         // Reject times outside opening hours.
         const { open, close } = parseBookableWindow(business.hours);
         const hour = Number(time.split(":")[0]) + Number(time.split(":")[1]) / 60;
@@ -476,6 +485,12 @@ export async function executeTool(
         const todayStr = new Date().toISOString().slice(0, 10);
         if (newDate < todayStr) {
           return { result: `${newDate} is in the past. Ask for a future date.`, isError: true };
+        }
+        if (isClosedOn(business, newDate)) {
+          return {
+            result: `${business.name} is closed on ${newDate}. Offer another day.`,
+            isError: true,
+          };
         }
         if (await isSlotTaken(business.id, newDate, newTime)) {
           return {

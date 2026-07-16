@@ -116,6 +116,18 @@ export default function SettingsPage() {
           </label>
           <label className="block text-sm">
             <span className="text-slate-400">
+              Outbound webhook URL — AIVA POSTs booking/order/callback events here
+              (Zapier, n8n, your backend)
+            </span>
+            <input
+              value={selected.webhookUrl ?? ""}
+              onChange={(e) => update({ webhookUrl: e.target.value || undefined })}
+              placeholder="https://hooks.zapier.com/…"
+              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="text-slate-400">
               Holiday closures — comma-separated dates (YYYY-MM-DD), never bookable
             </span>
             <input

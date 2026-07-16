@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { ActionItem } from "@/lib/types";
 
 const NAV = [
   { href: "/dashboard", label: "Overview", icon: "📊" },
@@ -15,6 +17,25 @@ const NAV = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [openTasks, setOpenTasks] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    async function poll() {
+      try {
+        const tasks: ActionItem[] = await fetch("/api/tasks").then((r) => r.json());
+        if (active) setOpenTasks(tasks.filter((t) => !t.done).length);
+      } catch {}
+    }
+    poll();
+    const t = setInterval(() => {
+      if (document.visibilityState === "visible") poll();
+    }, 10_000);
+    return () => {
+      active = false;
+      clearInterval(t);
+    };
+  }, []);
 
   return (
     <nav className="sticky top-24 space-y-1">
@@ -34,7 +55,12 @@ export default function Sidebar() {
               {item.icon}
             </span>
             {item.label}
-            {active && (
+            {item.href === "/dashboard/tasks" && openTasks > 0 && (
+              <span className="ml-auto rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
+                {openTasks}
+              </span>
+            )}
+            {active && item.href !== "/dashboard/tasks" && (
               <span className="ml-auto h-1.5 w-1.5 rounded-full bg-brand-400" />
             )}
           </Link>

@@ -58,6 +58,7 @@ export default function DemoPage() {
   const callIdRef = useRef<string>(`web_${Date.now().toString(36)}`);
   const recognitionRef = useRef<any>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetch("/api/businesses")
@@ -74,13 +75,21 @@ export default function DemoPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [turns, thinking]);
 
-  // Escape stops the mic and any speech playback.
+  // Escape stops the mic and playback; "/" focuses the composer.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
         recognitionRef.current?.stop();
         setListening(false);
         window.speechSynthesis?.cancel();
+      }
+      if (
+        e.key === "/" &&
+        !(e.target instanceof HTMLInputElement) &&
+        !(e.target instanceof HTMLTextAreaElement)
+      ) {
+        e.preventDefault();
+        inputRef.current?.focus();
       }
     }
     window.addEventListener("keydown", onKey);
@@ -296,7 +305,11 @@ export default function DemoPage() {
               </div>
 
               {/* transcript */}
-              <div className="flex h-[400px] flex-col gap-3 overflow-y-auto p-5">
+              <div
+                className="flex h-[400px] flex-col gap-3 overflow-y-auto p-5"
+                aria-live="polite"
+                aria-label="Conversation transcript"
+              >
                 {turns.length === 0 && (
                   <div className="m-auto text-center text-slate-500">
                     <div className="animate-floaty text-5xl">🎙️</div>
@@ -370,9 +383,10 @@ export default function DemoPage() {
                   </button>
                 )}
                 <input
+                  ref={inputRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder={listening ? "Listening…" : "Or type your message…"}
+                  placeholder={listening ? "Listening…" : "Or type your message… (press / to focus)"}
                   className="flex-1 rounded-xl border border-slate-700/80 bg-slate-950/80 px-4 py-3 text-sm outline-none transition focus:border-brand-500"
                 />
                 <button type="submit" className="btn-primary !px-5" disabled={thinking}>

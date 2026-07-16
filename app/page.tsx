@@ -83,33 +83,21 @@ const TESTIMONIALS = [
   },
 ];
 
-const PLANS = [
+const OPEN_SOURCE_POINTS = [
   {
-    name: "Starter",
-    price: "$49",
-    tagline: "For a single line",
-    features: ["1 phone line", "200 calls / month", "Bookings & FAQs", "Dashboard & transcripts"],
-    featured: false,
+    icon: "🔓",
+    title: "MIT licensed, forever",
+    body: "No paid tiers, no locked features, no per-seat pricing. Every capability on this page is in the repo — clone it and it's yours.",
   },
   {
-    name: "Growth",
-    price: "$149",
-    tagline: "Most popular",
-    features: [
-      "3 phone lines",
-      "Unlimited calls",
-      "Orders + SMS confirmations",
-      "Post-call intelligence & analytics",
-      "8+ languages",
-    ],
-    featured: true,
+    icon: "🏠",
+    title: "Self-hosted, your data",
+    body: "Transcripts, customer numbers and bookings live on your infrastructure. Nothing phones home.",
   },
   {
-    name: "Scale",
-    price: "Custom",
-    tagline: "Multi-location",
-    features: ["Unlimited lines", "CRM & calendar integrations", "Custom voices", "Priority support"],
-    featured: false,
+    icon: "🛠️",
+    title: "Built to be hacked on",
+    body: "Typed end to end, unit-tested guardrails, a documented architecture, and a single-file storage contract you can swap for Postgres.",
   },
 ];
 
@@ -281,35 +269,45 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ---------- Pricing ---------- */}
-        <section id="pricing" className="relative py-24">
+        {/* ---------- Open source ---------- */}
+        <section id="open-source" className="relative py-24">
           <div className="orb right-[5%] top-[20%] h-72 w-72 animate-orb bg-purple-700/30" aria-hidden />
           <div className="container-page relative">
             <Reveal>
               <div className="text-center">
-                <p className="eyebrow">Pricing</p>
+                <p className="eyebrow">100% free &amp; open source</p>
                 <h2 className="mt-4 font-display text-4xl font-semibold tracking-tight md:text-5xl">
-                  Cheaper than one missed booking a day.
+                  No pricing page. Just a repo.
                 </h2>
+                <p className="mx-auto mt-4 max-w-xl text-slate-400">
+                  AIVA is MIT-licensed community software. You pay your own
+                  Anthropic and Twilio usage — and nothing to us, ever.
+                </p>
               </div>
             </Reveal>
             <div className="mx-auto mt-14 grid max-w-4xl gap-5 lg:grid-cols-3">
-              {PLANS.map((p, i) => (
-                <Reveal key={p.name} delay={i * 100}>
-                  {p.featured ? (
-                    <div className="card-glow h-full">
-                      <div className="flex h-full flex-col">
-                        <PlanBody plan={p} />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="card card-hover flex h-full flex-col">
-                      <PlanBody plan={p} />
-                    </div>
-                  )}
+              {OPEN_SOURCE_POINTS.map((p, i) => (
+                <Reveal key={p.title} delay={i * 100}>
+                  <div className="card card-hover h-full">
+                    <div className="text-3xl">{p.icon}</div>
+                    <h3 className="mt-4 text-lg font-semibold">{p.title}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-400">{p.body}</p>
+                  </div>
                 </Reveal>
               ))}
             </div>
+            <Reveal delay={200}>
+              <div className="mt-10 flex justify-center">
+                <a
+                  href="https://github.com/7XLabs/aiva"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn-primary"
+                >
+                  ⭐ Star on GitHub
+                </a>
+              </div>
+            </Reveal>
           </div>
         </section>
 
@@ -365,35 +363,3 @@ export default function Home() {
   );
 }
 
-function PlanBody({ plan }: { plan: (typeof PLANS)[number] }) {
-  return (
-    <>
-      <div className="flex items-baseline justify-between">
-        <h3 className="font-display text-xl font-semibold">{plan.name}</h3>
-        <span className={`text-xs ${plan.featured ? "text-brand-300" : "text-slate-500"}`}>
-          {plan.tagline}
-        </span>
-      </div>
-      <div className="mt-4 font-display text-4xl font-semibold">
-        {plan.price}
-        {plan.price.startsWith("$") && (
-          <span className="text-base font-normal text-slate-500">/mo</span>
-        )}
-      </div>
-      <ul className="mt-6 flex-1 space-y-2.5 text-sm text-slate-300">
-        {plan.features.map((f) => (
-          <li key={f} className="flex items-start gap-2.5">
-            <span className="mt-0.5 text-emerald-400">✓</span>
-            {f}
-          </li>
-        ))}
-      </ul>
-      <Link
-        href="/onboard"
-        className={`${plan.featured ? "btn-primary" : "btn-secondary"} mt-8 w-full`}
-      >
-        Get started
-      </Link>
-    </>
-  );
-}

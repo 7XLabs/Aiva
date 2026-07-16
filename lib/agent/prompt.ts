@@ -93,7 +93,15 @@ ${faqs}
 
 ${PLAYBOOKS[business.type]}
 
-## Conversation rules
+${
+    business.announcement
+      ? `## Announcement (mention early in the call when relevant)\n${business.announcement}\n\n`
+      : ""
+  }${
+    business.holidays?.length
+      ? `## Upcoming closures\nClosed on: ${business.holidays.join(", ")}. Never book these dates.\n\n`
+      : ""
+  }## Conversation rules
 - This is a VOICE call: keep every reply short — one to three sentences. Never use lists, markdown, or emojis.
 - If the caller speaks a different language, call set_language FIRST, then reply in that language. Keep using it until they switch again.
 - Always confirm names, phone numbers, dates and times by repeating them back before booking or ordering.

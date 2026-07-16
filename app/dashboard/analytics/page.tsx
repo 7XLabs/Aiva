@@ -212,6 +212,8 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
+      <Heatmap calls={calls} />
+
       <AiReport />
 
       <div className="card mt-6">
@@ -232,6 +234,60 @@ export default function AnalyticsPage() {
             ))}
           </ul>
         )}
+      </div>
+    </div>
+  );
+}
+
+// When do calls actually come in? Weekday × hour grid.
+function Heatmap({ calls }: { calls: { startedAt: string }[] }) {
+  const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 7:00–20:00
+
+  const grid: number[][] = DAYS.map(() => HOURS.map(() => 0));
+  for (const c of calls) {
+    const d = new Date(c.startedAt);
+    const hourIdx = HOURS.indexOf(d.getHours());
+    if (hourIdx >= 0) grid[d.getDay()][hourIdx]++;
+  }
+  const max = Math.max(1, ...grid.flat());
+
+  return (
+    <div className="card mt-6">
+      <h2 className="font-semibold">Call volume heatmap</h2>
+      <p className="mt-1 text-xs text-slate-500">
+        Weekday × hour — spot the rushes a human desk drowns in.
+      </p>
+      <div className="mt-4 overflow-x-auto">
+        <div className="min-w-[560px]">
+          <div className="grid grid-cols-[3rem_repeat(14,1fr)] gap-1 text-[10px] text-slate-500">
+            <div />
+            {HOURS.map((h) => (
+              <div key={h} className="text-center">{h}</div>
+            ))}
+            {DAYS.map((day, di) => (
+              <>
+                <div key={day} className="flex items-center">{day}</div>
+                {HOURS.map((h, hi) => {
+                  const v = grid[di][hi];
+                  return (
+                    <div
+                      key={`${day}-${h}`}
+                      title={`${day} ${h}:00 — ${v} call${v === 1 ? "" : "s"}`}
+                      className="aspect-square rounded-sm"
+                      style={{
+                        backgroundColor:
+                          v === 0
+                            ? "rgba(148,163,184,0.08)"
+                            : `rgba(84,100,251,${0.25 + 0.75 * (v / max)})`,
+                      }}
+                    />
+                  );
+                })}
+              </>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

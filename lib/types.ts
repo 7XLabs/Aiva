@@ -11,6 +11,10 @@ export interface Business {
   staffPhone?: string;
   address: string;
   hours: string;
+  // Dates (YYYY-MM-DD) the business is closed — holidays, maintenance days.
+  holidays?: string[];
+  // Short broadcast note read to every caller, e.g. "closed early for Diwali".
+  announcement?: string;
   languages: string[];
   services: Service[];
   faqs: Faq[];

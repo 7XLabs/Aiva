@@ -93,19 +93,56 @@ export default function SettingsPage() {
             Teach AIVA live — changes apply to the very next call.
           </p>
         </div>
-        <select
-          value={selected.id}
-          onChange={(e) =>
-            setSelected(businesses.find((b) => b.id === e.target.value) ?? null)
-          }
-          className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm"
-        >
-          {businesses.map((b) => (
-            <option key={b.id} value={b.id}>
-              {b.name}
-            </option>
-          ))}
-        </select>
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={selected.id}
+            onChange={(e) =>
+              setSelected(businesses.find((b) => b.id === e.target.value) ?? null)
+            }
+            className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm"
+          >
+            {businesses.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+          <a
+            href={`/api/businesses/${selected.id}/export`}
+            className="btn-secondary !px-3 !py-2 text-xs"
+            title="Download this configuration as JSON"
+          >
+            ⬇ Export
+          </a>
+          <label className="btn-secondary cursor-pointer !px-3 !py-2 text-xs" title="Import a config JSON as a new business">
+            ⬆ Import
+            <input
+              type="file"
+              accept="application/json"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                try {
+                  const body = await file.text();
+                  const res = await fetch("/api/businesses/import", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body,
+                  });
+                  const created = await res.json();
+                  if (!res.ok) throw new Error(created.error ?? "import failed");
+                  setBusinesses((bs) => [...bs, created]);
+                  setSelected(created);
+                } catch (err) {
+                  alert(err instanceof Error ? err.message : "Import failed");
+                } finally {
+                  e.target.value = "";
+                }
+              }}
+            />
+          </label>
+        </div>
       </div>
 
       <div className="card mt-6">

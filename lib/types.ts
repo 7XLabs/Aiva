@@ -15,6 +15,11 @@ export interface Business {
   holidays?: string[];
   // Short broadcast note read to every caller, e.g. "closed early for Diwali".
   announcement?: string;
+  // Custom first line for new callers; {name} is replaced with the business name.
+  greeting?: string;
+  // Outbound webhook: AIVA POSTs booking/order/callback events here
+  // (Zapier, n8n, Slack workflows, your own backend).
+  webhookUrl?: string;
   languages: string[];
   services: Service[];
   faqs: Faq[];

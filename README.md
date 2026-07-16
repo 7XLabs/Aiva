@@ -50,7 +50,7 @@ Unlike a phone tree or IVR, there are no menus. Unlike most "AI receptionist" Sa
 | Speaks caller's language | ✅ 8+ | ❌ | ⚠️ rarely | ❌ |
 | Remembers returning callers | ✅ | ❌ | ❌ | ❌ |
 | Per-call analytics & sentiment | ✅ | ❌ | ❌ | ❌ |
-| Cost | Self-host | $$ | $$$$ | lost revenue |
+| Cost | **Free (MIT)** — self-host | $$ | $$$$ | lost revenue |
 
 ## 🚀 Quick start
 

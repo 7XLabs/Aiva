@@ -71,6 +71,9 @@ export interface Appointment {
   createdAt: string;
   // Set once the reminder engine has texted this appointment (dedup guard).
   reminderSentAt?: string;
+  // Standing bookings ("every Tuesday at 10") share a seriesId.
+  seriesId?: string;
+  recurrence?: "weekly" | "biweekly";
 }
 
 export interface OrderItem {

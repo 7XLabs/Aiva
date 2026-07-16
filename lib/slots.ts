@@ -63,6 +63,19 @@ export function isClosedOn(
   return !parseOpenDays(business.hours).has(weekday);
 }
 
+// Is the business open at this moment? Drives after-hours call behavior.
+export function isOpenNow(
+  business: Pick<Business, "hours" | "holidays">,
+  now: Date = new Date()
+): boolean {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  if (isClosedOn(business, date)) return false;
+  const { open, close } = parseBookableWindow(business.hours);
+  const hour = now.getHours() + now.getMinutes() / 60;
+  return hour >= open && hour < close;
+}
+
 export async function findFreeSlots(
   business: Business,
   date: string,

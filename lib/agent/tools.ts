@@ -13,6 +13,7 @@ import {
   setWaitlistStatus,
 } from "../db";
 import { findFreeSlots, isClosedOn, parseBookableWindow } from "../slots";
+import { occurrenceDates } from "../recurrence";
 import { sendSms } from "../sms";
 import { bookingConfirmationSms } from "../smsTemplates";
 import { emitWebhook } from "../webhooks";
@@ -105,6 +106,30 @@ export const agentTools: Anthropic.Tool[] = [
         customer_phone: { type: "string" },
       },
       required: ["summary"],
+    },
+  },
+  {
+    name: "book_recurring_appointment",
+    description:
+      "Book a standing appointment repeating weekly or every two weeks (books the next 4 occurrences). Use ONLY when the caller explicitly asks for a repeating booking ('every Tuesday', 'same time every week'). Confirm service, weekday, time, name and phone first.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        customer_name: { type: "string" },
+        customer_phone: { type: "string" },
+        service_name: { type: "string" },
+        first_date: { type: "string", description: "First occurrence, YYYY-MM-DD" },
+        time: { type: "string", description: "24h HH:mm" },
+        recurrence: { type: "string", enum: ["weekly", "biweekly"] },
+      },
+      required: [
+        "customer_name",
+        "customer_phone",
+        "service_name",
+        "first_date",
+        "time",
+        "recurrence",
+      ],
     },
   },
   {
@@ -425,6 +450,75 @@ export async function executeTool(
         return {
           result: `Order placed. Total is $${total.toFixed(2)}. Reference: ${order.id}.`,
           event: "order_taken",
+        };
+      }
+
+      case "book_recurring_appointment": {
+        const firstDate = String(input.first_date);
+        const time = String(input.time);
+        const recurrence = input.recurrence === "biweekly" ? "biweekly" : "weekly";
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(firstDate) || !/^\d{1,2}:\d{2}$/.test(time)) {
+          return {
+            result: "Invalid date/time format. Use YYYY-MM-DD and 24h HH:mm.",
+            isError: true,
+          };
+        }
+        const todayIso = new Date().toISOString().slice(0, 10);
+        if (firstDate < todayIso) {
+          return { result: `${firstDate} is in the past. Ask for a future start date.`, isError: true };
+        }
+
+        const seriesId = newId("series");
+        const service = business.services.find(
+          (s) => s.name.toLowerCase() === String(input.service_name).toLowerCase()
+        );
+        const booked: string[] = [];
+        const skipped: string[] = [];
+        for (const date of occurrenceDates(firstDate, recurrence, 4)) {
+          if (isClosedOn(business, date) || (await isSlotTaken(business.id, date, time))) {
+            skipped.push(date);
+            continue;
+          }
+          await addAppointment({
+            id: newId("appt"),
+            businessId: business.id,
+            customerName: String(input.customer_name),
+            customerPhone: String(input.customer_phone),
+            serviceId: service?.id ?? "custom",
+            serviceName: service?.name ?? String(input.service_name),
+            date,
+            time,
+            status: "confirmed",
+            createdAt: new Date().toISOString(),
+            seriesId,
+            recurrence,
+          });
+          booked.push(date);
+        }
+        if (booked.length === 0) {
+          return {
+            result: `None of the next 4 ${recurrence} occurrences at ${time} were available. Offer a different time.`,
+            isError: true,
+          };
+        }
+        void sendSms(
+          String(input.customer_phone),
+          `${business.name}: your ${recurrence} ${service?.name ?? input.service_name} at ${time} is set for: ${booked.join(", ")}.`
+        );
+        emitWebhook(business, "appointment.booked", {
+          seriesId,
+          recurrence,
+          dates: booked,
+          time,
+          customer: String(input.customer_name),
+        });
+        return {
+          result: `Standing booking created (${recurrence} at ${time}): ${booked.join(", ")}.${
+            skipped.length
+              ? ` Could not book ${skipped.join(", ")} (closed or taken) — mention this.`
+              : ""
+          } SMS confirmation sent.`,
+          event: "appointment_booked",
         };
       }
 

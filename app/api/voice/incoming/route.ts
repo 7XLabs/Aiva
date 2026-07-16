@@ -61,9 +61,12 @@ export async function POST(req: NextRequest) {
   });
 
   const firstName = known.name?.split(" ")[0];
+  const defaultGreeting =
+    business.greeting?.replace("{name}", business.name) ??
+    `Thank you for calling ${business.name}. This is AIVA, your virtual assistant. How can I help you today?`;
   const greeting = firstName
     ? greetingFor(lang, business.name, firstName)
-    : `Thank you for calling ${business.name}. This is AIVA, your virtual assistant. How can I help you today?`;
+    : defaultGreeting;
   const actionUrl = `/api/voice/respond?businessId=${business.id}`;
 
   return new NextResponse(sayAndGather(greeting, lang, actionUrl), {

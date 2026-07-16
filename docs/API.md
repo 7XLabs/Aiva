@@ -49,13 +49,22 @@ Cross-call AI business report → `{ headline, highlights[], top_caller_needs[],
 | `/api/tasks` | GET, PATCH | Action items |
 | `/api/waitlist[?businessId]` | GET | Waitlist entries |
 | `/api/reminders/run` | POST | Send tomorrow's SMS reminders (cron) |
+| `/api/businesses/:id/export` | GET | Download config as portable JSON |
+| `/api/businesses/import` | POST | Create a business from an exported config |
+| `/api/faq-suggestions?businessId` | POST | Mine calls for missing FAQs |
+| `/api/sms/incoming` | POST | Twilio SMS webhook (CANCEL keyword + replies→tasks) |
 | `/api/health` | GET | Integration status |
+
+With `DASHBOARD_TOKEN` set, data endpoints require the `aiva_token` cookie
+(sign in once via `/dashboard?token=…`) or an `X-AIVA-Token` header.
+See [WEBHOOKS.md](WEBHOOKS.md) for outbound event payloads.
 
 ## Agent tools (internal)
 
-`check_availability`, `find_free_slots`, `book_appointment`, `take_order`,
-`lookup_my_appointments`, `cancel_appointment`, `reschedule_appointment`,
-`join_waitlist`, `request_callback`, `set_language`, `transfer_to_human`.
+`check_availability`, `find_free_slots`, `book_appointment`,
+`book_recurring_appointment`, `take_order`, `lookup_my_appointments`,
+`cancel_appointment`, `reschedule_appointment`, `join_waitlist`,
+`request_callback`, `set_language`, `transfer_to_human`.
 
 Every state-changing tool validates its inputs server-side and returns
 corrective error text the model uses to recover.

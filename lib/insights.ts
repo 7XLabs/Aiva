@@ -3,6 +3,7 @@
 // the result is always parseable.
 import Anthropic from "@anthropic-ai/sdk";
 import { addActionItem, newId, upsertCall } from "./db";
+import { emitWebhook } from "./webhooks";
 import type { Business, CallLog } from "./types";
 
 const client = new Anthropic();
@@ -110,6 +111,15 @@ export async function analyzeCall(
     call.actionItems = parsed.action_items;
     call.upsellOpportunity = parsed.upsell_opportunity || undefined;
     await upsertCall(call);
+
+    emitWebhook(business, "call.analyzed", {
+      callId: call.id,
+      summary: call.summary,
+      sentiment: call.sentiment,
+      intent: call.intent,
+      resolved: call.resolved,
+      actionItems: call.actionItems,
+    });
 
     // Materialize action items so they land in the staff task queue.
     for (const item of parsed.action_items) {

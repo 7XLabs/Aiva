@@ -15,6 +15,7 @@ import {
 import { findFreeSlots, isClosedOn, parseBookableWindow } from "../slots";
 import { sendSms } from "../sms";
 import { bookingConfirmationSms } from "../smsTemplates";
+import { emitWebhook } from "../webhooks";
 import type { Business, Order, OrderItem } from "../types";
 
 // Tool definitions passed to Claude. Descriptions are prescriptive about WHEN
@@ -302,6 +303,14 @@ export async function executeTool(
             ref: appt.id,
           })
         );
+        emitWebhook(business, "appointment.booked", {
+          id: appt.id,
+          customer: appt.customerName,
+          phone: appt.customerPhone,
+          service: appt.serviceName,
+          date: appt.date,
+          time: appt.time,
+        });
         return {
           result: `Appointment confirmed and SMS confirmation sent. Reference: ${appt.id}.`,
           event: "appointment_booked",
@@ -327,6 +336,10 @@ export async function executeTool(
             : undefined,
           done: false,
           createdAt: new Date().toISOString(),
+        });
+        emitWebhook(business, "callback.requested", {
+          summary: String(input.summary),
+          phone: input.customer_phone ? String(input.customer_phone) : undefined,
         });
         return {
           result:
@@ -401,6 +414,14 @@ export async function executeTool(
           createdAt: new Date().toISOString(),
         };
         await addOrder(order);
+        emitWebhook(business, "order.placed", {
+          id: order.id,
+          customer: order.customerName,
+          items: order.items,
+          total: order.total,
+          type: order.type,
+          address: order.address,
+        });
         return {
           result: `Order placed. Total is $${total.toFixed(2)}. Reference: ${order.id}.`,
           event: "order_taken",
@@ -465,6 +486,13 @@ export async function executeTool(
             `Good news from ${business.name}! A slot just opened on ${appt.date} at ${appt.time}. Call us to grab it — first come, first served.`
           );
         }
+        emitWebhook(business, "appointment.cancelled", {
+          id: appt.id,
+          customer: appt.customerName,
+          service: appt.serviceName,
+          date: appt.date,
+          time: appt.time,
+        });
         return {
           result: `Cancelled ${appt.serviceName} on ${appt.date} at ${appt.time}. The ${appt.time} slot is now free.${
             waiting ? " A waitlisted caller has been notified by SMS." : ""
@@ -513,6 +541,13 @@ export async function executeTool(
           moved.customerPhone,
           `${business.name}: your ${moved.serviceName} has been moved to ${newDate} at ${newTime}. Ref ${moved.id}.`
         );
+        emitWebhook(business, "appointment.rescheduled", {
+          id: moved.id,
+          customer: moved.customerName,
+          service: moved.serviceName,
+          date: newDate,
+          time: newTime,
+        });
         return {
           result: `Rescheduled to ${newDate} at ${newTime} and SMS confirmation sent.`,
           event: "appointment_rescheduled",

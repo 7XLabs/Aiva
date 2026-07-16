@@ -17,14 +17,20 @@ export default function CallsPage() {
   const { data } = useDashboardData();
   const [openId, setOpenId] = useState<string | null>(null);
   const [outcomeFilter, setOutcomeFilter] = useState<string>("all");
+  const [search, setSearch] = useState("");
 
   const allCalls = (data?.calls ?? [])
     .slice()
     .sort((a, b) => b.startedAt.localeCompare(a.startedAt));
-  const calls =
-    outcomeFilter === "all"
-      ? allCalls
-      : allCalls.filter((c) => c.outcome === outcomeFilter);
+  const q = search.trim().toLowerCase();
+  const calls = allCalls.filter(
+    (c) =>
+      (outcomeFilter === "all" || c.outcome === outcomeFilter) &&
+      (!q ||
+        c.callerPhone.toLowerCase().includes(q) ||
+        c.summary?.toLowerCase().includes(q) ||
+        c.transcript.some((t) => t.text.toLowerCase().includes(q)))
+  );
   const outcomes = Array.from(new Set(allCalls.map((c) => c.outcome)));
 
   function exportCsv() {
@@ -59,7 +65,13 @@ export default function CallsPage() {
             Every conversation, fully transcribed.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search transcripts…"
+            className="w-48 rounded-xl border border-slate-700/80 bg-slate-900/80 px-3 py-2 text-sm outline-none focus:border-brand-500"
+          />
           <select
             value={outcomeFilter}
             onChange={(e) => setOutcomeFilter(e.target.value)}
@@ -107,6 +119,11 @@ export default function CallsPage() {
                         : c.sentiment === "negative"
                         ? "😠"
                         : "😐"}
+                    </span>
+                  )}
+                  {c.intent && (
+                    <span className="rounded bg-purple-500/15 px-1.5 py-0.5 text-[10px] text-purple-300">
+                      {c.intent}
                     </span>
                   )}
                 </div>

@@ -25,11 +25,50 @@ export function parseBookableWindow(hours: string): {
   return { open: DEFAULT_OPEN, close: DEFAULT_CLOSE };
 }
 
+const DAY_TOKENS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+
+// Parses which weekdays the business is open from its hours string:
+// "Mon–Sat 9:00–18:00" → closed Sunday; "Daily 11:00–23:00" → open all week.
+export function parseOpenDays(hours: string): Set<number> {
+  const all = new Set([0, 1, 2, 3, 4, 5, 6]);
+  if (/daily|every ?day|24\s*\/\s*7/i.test(hours)) return all;
+
+  const found = Array.from(
+    hours.toLowerCase().matchAll(/\b(sun|mon|tue|wed|thu|fri|sat)[a-z]*\b/g)
+  ).map((m) => DAY_TOKENS.indexOf(m[1]));
+  if (found.length === 0) return all;
+
+  // "Mon–Sat" style range (wrap-around like "Fri–Mon" supported)
+  if (found.length === 2 && /[–\-—]\s*(sun|mon|tue|wed|thu|fri|sat)/i.test(hours)) {
+    const days = new Set<number>();
+    let d = found[0];
+    while (true) {
+      days.add(d);
+      if (d === found[1]) break;
+      d = (d + 1) % 7;
+    }
+    return days;
+  }
+  // Explicit list ("Mon, Wed, Fri")
+  return new Set(found);
+}
+
+// Is the business closed on this date? Checks weekday + explicit holidays.
+export function isClosedOn(
+  business: Pick<Business, "hours" | "holidays">,
+  date: string
+): boolean {
+  if (business.holidays?.includes(date)) return true;
+  const weekday = new Date(`${date}T12:00:00`).getDay();
+  return !parseOpenDays(business.hours).has(weekday);
+}
+
 export async function findFreeSlots(
   business: Business,
   date: string,
   limit = 4
 ): Promise<string[]> {
+  if (isClosedOn(business, date)) return [];
   const { open, close } = parseBookableWindow(business.hours);
   const appts = await getAppointments(business.id);
   const taken = new Set(

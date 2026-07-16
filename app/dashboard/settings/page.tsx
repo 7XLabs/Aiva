@@ -2,12 +2,48 @@
 
 import { useEffect, useState } from "react";
 import type { Business } from "@/lib/types";
+import type { FaqSuggestion } from "@/lib/faqSuggest";
 
 export default function SettingsPage() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [selected, setSelected] = useState<Business | null>(null);
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [suggestions, setSuggestions] = useState<FaqSuggestion[]>([]);
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggestNote, setSuggestNote] = useState<string | null>(null);
+
+  async function fetchSuggestions() {
+    if (!selected) return;
+    setSuggesting(true);
+    setSuggestNote(null);
+    try {
+      const res = await fetch(`/api/faq-suggestions?businessId=${selected.id}`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "failed");
+      setSuggestions(data.suggestions);
+      if (data.suggestions.length === 0) {
+        setSuggestNote("No gaps found — your FAQs cover what callers ask. 🎉");
+      }
+    } catch (e) {
+      setSuggestNote(e instanceof Error ? e.message : "Suggestion failed");
+    } finally {
+      setSuggesting(false);
+    }
+  }
+
+  function acceptSuggestion(s: FaqSuggestion) {
+    if (!selected) return;
+    update({
+      faqs: [
+        ...selected.faqs,
+        { id: `f_${Date.now()}`, question: s.question, answer: s.draft_answer },
+      ],
+    });
+    setSuggestions((list) => list.filter((x) => x.question !== s.question));
+  }
 
   useEffect(() => {
     fetch("/api/businesses")
@@ -373,6 +409,47 @@ export default function SettingsPage() {
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="card mt-6 border-brand-500/30">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="font-semibold">🧠 FAQs AIVA thinks you&apos;re missing</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Mined from real calls it couldn&apos;t fully answer. Accept to add —
+              then edit any [FILL IN] placeholders above.
+            </p>
+          </div>
+          <button
+            onClick={fetchSuggestions}
+            disabled={suggesting}
+            className="btn-secondary !px-4 !py-2 text-sm disabled:opacity-50"
+          >
+            {suggesting ? "Mining call history…" : "Find knowledge gaps"}
+          </button>
+        </div>
+        {suggestNote && <p className="mt-3 text-sm text-slate-400">{suggestNote}</p>}
+        {suggestions.length > 0 && (
+          <div className="mt-4 space-y-3">
+            {suggestions.map((s) => (
+              <div key={s.question} className="animate-fade-up rounded-xl border border-slate-800 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium">{s.question}</div>
+                    <p className="mt-1 text-sm text-slate-400">{s.draft_answer}</p>
+                    <p className="mt-2 text-xs text-slate-600">↳ {s.evidence}</p>
+                  </div>
+                  <button
+                    onClick={() => acceptSuggestion(s)}
+                    className="btn-primary shrink-0 !px-3 !py-1.5 text-xs"
+                  >
+                    + Accept
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="sticky bottom-4 mt-6 flex items-center justify-end gap-3">

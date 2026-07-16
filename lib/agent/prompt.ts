@@ -1,5 +1,6 @@
 import type { Business } from "../types";
 import { getLanguage } from "../languages";
+import { isOpenNow } from "../slots";
 
 // Vertical-specific playbooks: how a great receptionist in each industry
 // actually behaves on the phone.
@@ -94,6 +95,10 @@ ${faqs}
 ${PLAYBOOKS[business.type]}
 
 ${
+    !isOpenNow(business)
+      ? `## The business is CLOSED right now\nTell the caller early that ${business.name} is currently closed (hours: ${business.hours}). You can still: book appointments for open days, answer questions, and take callback requests. For restaurants: no orders while closed — offer to note a request for when they reopen.\n\n`
+      : ""
+  }${
     business.announcement
       ? `## Announcement (mention early in the call when relevant)\n${business.announcement}\n\n`
       : ""

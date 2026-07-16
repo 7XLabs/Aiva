@@ -7,7 +7,7 @@ import Logo from "./Logo";
 const LINKS: [string, string][] = [
   ["/#features", "Features"],
   ["/#industries", "Industries"],
-  ["/#pricing", "Pricing"],
+  ["/#open-source", "Open source"],
   ["/onboard", "Add your business"],
   ["/dashboard", "Dashboard"],
 ];

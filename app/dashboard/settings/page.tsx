@@ -88,6 +88,54 @@ export default function SettingsPage() {
       </div>
 
       <div className="card mt-6">
+        <h2 className="font-semibold">Voice &amp; announcements</h2>
+        <div className="mt-4 space-y-4">
+          <label className="block text-sm">
+            <span className="text-slate-400">
+              Custom greeting (optional — use {"{name}"} for the business name)
+            </span>
+            <input
+              value={selected.greeting ?? ""}
+              onChange={(e) => update({ greeting: e.target.value || undefined })}
+              placeholder={`Thank you for calling ${selected.name}. This is AIVA…`}
+              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="text-slate-400">
+              Announcement — read to every caller while set
+            </span>
+            <input
+              value={selected.announcement ?? ""}
+              onChange={(e) =>
+                update({ announcement: e.target.value || undefined })
+              }
+              placeholder="We close at 3 PM this Friday for staff training."
+              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="text-slate-400">
+              Holiday closures — comma-separated dates (YYYY-MM-DD), never bookable
+            </span>
+            <input
+              value={(selected.holidays ?? []).join(", ")}
+              onChange={(e) =>
+                update({
+                  holidays: e.target.value
+                    .split(",")
+                    .map((s) => s.trim())
+                    .filter((s) => /^\d{4}-\d{2}-\d{2}$/.test(s)),
+                })
+              }
+              placeholder="2026-12-25, 2027-01-01"
+              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2"
+            />
+          </label>
+        </div>
+      </div>
+
+      <div className="card mt-6">
         <h2 className="font-semibold">Languages AIVA answers in</h2>
         <div className="mt-4 flex flex-wrap gap-2">
           {["en", "hi", "es", "fr", "de", "it", "pt", "ja"].map((code) => {

@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { rescheduleAppointment, setAppointmentStatus } from "@/lib/db";
+import {
+  cancelAndPromoteWaitlist,
+  getBusiness,
+  rescheduleAppointment,
+  setAppointmentStatus,
+} from "@/lib/db";
+import { sendSms } from "@/lib/sms";
 import type { Appointment } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -42,6 +48,23 @@ export async function PATCH(req: NextRequest) {
   if (!body.status || !STATUSES.includes(body.status)) {
     return NextResponse.json({ error: "valid status required" }, { status: 400 });
   }
+
+  // Cancelling promotes the waitlist and texts the next caller.
+  if (body.status === "cancelled") {
+    const { appt, promoted } = await cancelAndPromoteWaitlist(body.id);
+    if (!appt) {
+      return NextResponse.json({ error: "not found" }, { status: 404 });
+    }
+    if (promoted) {
+      const business = await getBusiness(appt.businessId);
+      void sendSms(
+        promoted.customerPhone,
+        `Good news from ${business?.name ?? "us"}! A slot opened on ${appt.date}. Call us to grab it — first come, first served.`
+      );
+    }
+    return NextResponse.json({ ...appt, waitlistNotified: Boolean(promoted) });
+  }
+
   const appt = await setAppointmentStatus(body.id, body.status);
   if (!appt) {
     return NextResponse.json({ error: "not found" }, { status: 404 });

@@ -17,7 +17,7 @@ test("Tue–Sun range closes Monday", () => {
 
 test("wrap-around ranges work (Fri–Mon)", () => {
   const days = parseOpenDays("Fri–Mon 9:00–17:00");
-  assert.deepEqual([...days].sort(), [0, 1, 5, 6]);
+  assert.deepEqual(Array.from(days).sort(), [0, 1, 5, 6]);
 });
 
 test("daily and 24/7 open every day", () => {

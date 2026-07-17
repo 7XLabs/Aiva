@@ -67,6 +67,12 @@ export async function getCallerContext(
       `Past visits: ${past.length} (last: ${past[0].serviceName} on ${past[0].date}).`
     );
   }
+  const noShows = myAppts.filter((a) => a.status === "no_show").length;
+  if (noShows >= 2) {
+    parts.push(
+      `⚠️ ${noShows} previous no-shows — politely confirm they'll definitely attend, or suggest they call to reconfirm the day before.`
+    );
+  }
   if (myOrders.length) {
     const last = myOrders[0];
     parts.push(

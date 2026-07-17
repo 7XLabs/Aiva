@@ -6,6 +6,10 @@
   color-scheme: dark;
 }
 
+html[data-theme="light"] {
+  color-scheme: light;
+}
+
 body {
   @apply bg-[#07080f] text-slate-100 antialiased;
   background-image: radial-gradient(
@@ -14,6 +18,36 @@ body {
       transparent
     );
   background-attachment: fixed;
+}
+
+/* Light theme: warm, high-contrast, keeps the brand accent. */
+html[data-theme="light"] body {
+  @apply bg-[#f7f8fc] text-slate-900;
+  background-image: radial-gradient(
+    ellipse 80% 50% at 50% -10%,
+    rgba(84, 100, 251, 0.08),
+    transparent
+  );
+}
+html[data-theme="light"] .card {
+  @apply border-slate-200 bg-white/80;
+}
+html[data-theme="light"] .glass {
+  @apply border-slate-200 bg-white/70;
+}
+html[data-theme="light"] .btn-secondary {
+  @apply border-slate-300 bg-white text-slate-700;
+}
+html[data-theme="light"] .text-slate-400 {
+  @apply text-slate-500;
+}
+html[data-theme="light"] .card-glow > div {
+  @apply bg-white;
+}
+html[data-theme="light"] input,
+html[data-theme="light"] select,
+html[data-theme="light"] textarea {
+  @apply border-slate-300 bg-white text-slate-900;
 }
 
 ::selection {

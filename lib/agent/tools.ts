@@ -15,7 +15,7 @@ import {
 import { findFreeSlots, isClosedOn, parseBookableWindow } from "../slots";
 import { occurrenceDates } from "../recurrence";
 import { sendSms } from "../sms";
-import { bookingConfirmationSms } from "../smsTemplates";
+import { bookingConfirmationSms, orderConfirmationSms } from "../smsTemplates";
 import { emitWebhook } from "../webhooks";
 import type { Business, Order, OrderItem } from "../types";
 
@@ -442,6 +442,16 @@ export async function executeTool(
           createdAt: new Date().toISOString(),
         };
         await addOrder(order);
+        void sendSms(
+          order.customerPhone,
+          orderConfirmationSms(ctx.language ?? "en", {
+            business: business.name,
+            ref: order.id,
+            total: order.total,
+            type: order.type,
+            etaMinutes: order.type === "delivery" ? 40 : 20,
+          })
+        );
         emitWebhook(business, "order.placed", {
           id: order.id,
           customer: order.customerName,

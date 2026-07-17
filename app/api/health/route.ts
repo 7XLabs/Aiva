@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { env, integrationSummary } from "@/lib/env";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,10 +10,10 @@ export async function GET() {
     status: "ok",
     time: new Date().toISOString(),
     integrations: {
-      anthropic: Boolean(process.env.ANTHROPIC_API_KEY),
-      twilio: Boolean(
-        process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN
-      ),
+      anthropic: env.hasAnthropic(),
+      twilio: env.hasTwilio(),
+      dashboardAuth: env.hasDashboardAuth(),
     },
+    notes: integrationSummary(),
   });
 }

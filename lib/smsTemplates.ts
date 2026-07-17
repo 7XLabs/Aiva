@@ -33,3 +33,26 @@ export function bookingConfirmationSms(
 ): string {
   return (BOOKING_TEMPLATES[lang] ?? BOOKING_TEMPLATES.en)(params);
 }
+
+interface OrderSmsParams {
+  business: string;
+  ref: string;
+  total: number;
+  type: "pickup" | "delivery";
+  etaMinutes: number;
+}
+
+const ORDER_TEMPLATES: Record<string, (p: OrderSmsParams) => string> = {
+  en: (p) =>
+    `${p.business}: order ${p.ref} received — $${p.total.toFixed(2)}, ${p.type}, ready in ~${p.etaMinutes} min. Thank you!`,
+  es: (p) =>
+    `${p.business}: pedido ${p.ref} recibido — $${p.total.toFixed(2)}, ${p.type === "delivery" ? "entrega" : "recogida"}, listo en ~${p.etaMinutes} min. ¡Gracias!`,
+  hi: (p) =>
+    `${p.business}: ऑर्डर ${p.ref} मिल गया — $${p.total.toFixed(2)}, ~${p.etaMinutes} मिनट में तैयार। धन्यवाद!`,
+  fr: (p) =>
+    `${p.business} : commande ${p.ref} reçue — ${p.total.toFixed(2)} $, prête dans ~${p.etaMinutes} min. Merci !`,
+};
+
+export function orderConfirmationSms(lang: string, params: OrderSmsParams): string {
+  return (ORDER_TEMPLATES[lang] ?? ORDER_TEMPLATES.en)(params);
+}

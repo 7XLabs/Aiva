@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useDashboardData } from "@/lib/useDashboardData";
 import type { Digest } from "@/lib/digest";
 
@@ -266,8 +266,8 @@ function Heatmap({ calls }: { calls: { startedAt: string }[] }) {
               <div key={h} className="text-center">{h}</div>
             ))}
             {DAYS.map((day, di) => (
-              <>
-                <div key={day} className="flex items-center">{day}</div>
+              <Fragment key={day}>
+                <div className="flex items-center">{day}</div>
                 {HOURS.map((h, hi) => {
                   const v = grid[di][hi];
                   return (
@@ -284,7 +284,7 @@ function Heatmap({ calls }: { calls: { startedAt: string }[] }) {
                     />
                   );
                 })}
-              </>
+              </Fragment>
             ))}
           </div>
         </div>

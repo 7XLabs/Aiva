@@ -166,6 +166,27 @@ export async function setAppointmentStatus(
   return appt;
 }
 
+// Cancelling frees a slot — notify the first caller waiting for that date.
+// Returns the notified waitlist entry (for SMS), or null.
+export async function cancelAndPromoteWaitlist(id: string) {
+  const store = await load();
+  const appt = store.appointments.find((a) => a.id === id);
+  if (!appt) return { appt: null, promoted: null };
+  appt.status = "cancelled";
+  const waiting = store.waitlist.find(
+    (w) =>
+      w.businessId === appt.businessId &&
+      w.date === appt.date &&
+      w.status === "waiting"
+  );
+  if (waiting) {
+    waiting.status = "notified";
+    waiting.notifiedAt = new Date().toISOString();
+  }
+  await persist();
+  return { appt, promoted: waiting ?? null };
+}
+
 // ---------- Orders ----------
 export async function getOrders(businessId?: string) {
   const store = await load();

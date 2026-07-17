@@ -137,9 +137,12 @@ lib/
 npm test          # unit tests (agent guardrails, scheduling, TwiML, i18n)
 npm run typecheck # strict TypeScript
 npm run build     # production build
+npm run doctor    # check which integrations are configured
+npm run seed:demo # fill the dashboard with realistic demo data
+npm run eval      # live agent behavior evals (needs ANTHROPIC_API_KEY)
 ```
 
-CI runs all three on every push.
+CI runs typecheck, tests and build on every push.
 
 ## 🤝 Contributing
 

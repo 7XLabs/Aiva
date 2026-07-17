@@ -291,19 +291,21 @@ export async function executeTool(
             isError: true,
           };
         }
-        // Re-check availability at booking time — the slot may have been
-        // taken since check_availability ran (or the model skipped checking).
-        if (await isSlotTaken(business.id, date, time)) {
-          return {
-            result: `The ${date} ${time} slot was just taken. Apologize and offer another time (use find_free_slots).`,
-            isError: true,
-          };
-        }
-
         const serviceName = String(input.service_name);
         const service = business.services.find(
           (s) => s.name.toLowerCase() === serviceName.toLowerCase()
         );
+        const duration = service?.durationMinutes ?? 30;
+
+        // Re-check availability at booking time, duration-aware — the slot
+        // may have been taken since check_availability ran (or the model
+        // skipped checking), and long services block neighboring slots.
+        if (await isSlotTaken(business.id, date, time, duration)) {
+          return {
+            result: `The ${date} ${time} slot conflicts with an existing booking (this service runs ${duration} min). Apologize and offer another time (use find_free_slots).`,
+            isError: true,
+          };
+        }
         const appt = await addAppointment({
           id: newId("appt"),
           businessId: business.id,
@@ -313,6 +315,7 @@ export async function executeTool(
           serviceName: service?.name ?? serviceName,
           date: String(input.date),
           time: String(input.time),
+          durationMinutes: duration,
           status: "confirmed",
           notes: input.notes ? String(input.notes) : undefined,
           createdAt: new Date().toISOString(),

@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.3.0 (unreleased)
+
+### Fully open source
+- Removed all pricing — MIT, self-hosted, no paid tiers
+
+### Agent
+- Closed-day & holiday awareness; live open/now detection changes behavior after hours
+- Duration-aware conflict checks (a 90-min service blocks neighboring slots)
+- Recurring/standing appointments (weekly/biweekly, next 4 occurrences)
+- Repeat no-show detection surfaces to the agent
+- Per-vertical announcement + custom greeting broadcasting
+
+### Platform
+- Outbound webhooks (Zapier/n8n/backends) with HMAC signing + docs
+- Two-way SMS (CANCEL keyword, replies → staff tasks); order-ready + order-confirmation texts
+- Emergency broadcast to today's/tomorrow's customers
+- AI FAQ-gap mining from unresolved calls
+- Business config export/import (JSON)
+- Optional dashboard token auth (middleware)
+- Demo seeder, config doctor, live agent eval harness
+
+### Dashboard & UI
+- Light/dark theme toggle; command palette (⌘K); mobile nav
+- Call-volume heatmap; needs-attention alerts; transcript search; staff notes
+- No-show/reschedule controls; standing-booking markers; live task badge
+
 ## 0.2.0
 
 ### Agent intelligence

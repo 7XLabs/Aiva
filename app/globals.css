@@ -54,6 +54,21 @@ html[data-theme="light"] textarea {
   @apply bg-brand-500/40 text-white;
 }
 
+/* Visible keyboard focus everywhere. */
+:focus-visible {
+  outline: 2px solid theme("colors.brand.400");
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Skip-to-content link — visible only when focused. */
+.skip-link {
+  @apply absolute left-4 top-4 z-[200] -translate-y-20 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white transition-transform;
+}
+.skip-link:focus {
+  @apply translate-y-0;
+}
+
 .container-page {
   @apply mx-auto max-w-6xl px-6;
 }

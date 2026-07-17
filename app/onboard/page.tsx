@@ -17,6 +17,8 @@ export default function OnboardPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Business | null>(null);
+  const origin =
+    typeof window !== "undefined" ? window.location.origin : "https://your-domain";
 
   async function generate() {
     setLoading(true);
@@ -141,8 +143,34 @@ export default function OnboardPage() {
               </dl>
             </div>
 
+            <div className="card mt-6 text-left">
+              <h3 className="text-sm font-semibold">📞 Connect a phone number</h3>
+              <p className="mt-2 text-xs text-slate-400">
+                In your Twilio number&apos;s voice settings, set &quot;A call comes
+                in&quot; to POST to:
+              </p>
+              <div className="mt-2 flex items-center gap-2">
+                <code className="flex-1 overflow-x-auto rounded-lg bg-slate-950 px-3 py-2 text-xs text-brand-300">
+                  {origin}/api/voice/incoming?businessId={result.id}
+                </code>
+                <button
+                  onClick={() =>
+                    navigator.clipboard?.writeText(
+                      `${origin}/api/voice/incoming?businessId=${result.id}`
+                    )
+                  }
+                  className="btn-secondary shrink-0 !px-3 !py-2 text-xs"
+                >
+                  Copy
+                </button>
+              </div>
+              <p className="mt-2 text-xs text-slate-500">
+                No Twilio yet? Just try the browser demo — same AI brain.
+              </p>
+            </div>
+
             <div className="mt-8 flex flex-wrap justify-center gap-4">
-              <Link href="/demo" className="btn-primary">
+              <Link href={`/demo?biz=${result.id}`} className="btn-primary">
                 🎙️ Talk to your receptionist
               </Link>
               <button

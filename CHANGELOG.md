@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0 (unreleased)
+## 0.3.0
 
 ### Fully open source
 - Removed all pricing — MIT, self-hosted, no paid tiers

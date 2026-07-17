@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { setAppointmentStatus } from "@/lib/db";
+import { rescheduleAppointment, setAppointmentStatus } from "@/lib/db";
 import type { Appointment } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -13,14 +13,36 @@ const STATUSES: Appointment["status"][] = [
 ];
 
 export async function PATCH(req: NextRequest) {
-  const { id, status } = (await req.json()) as {
+  const body = (await req.json()) as {
     id: string;
-    status: Appointment["status"];
+    status?: Appointment["status"];
+    date?: string;
+    time?: string;
   };
-  if (!id || !STATUSES.includes(status)) {
-    return NextResponse.json({ error: "id and valid status required" }, { status: 400 });
+  if (!body.id) {
+    return NextResponse.json({ error: "id required" }, { status: 400 });
   }
-  const appt = await setAppointmentStatus(id, status);
+
+  // Staff reschedule: new date + time.
+  if (body.date && body.time) {
+    if (
+      !/^\d{4}-\d{2}-\d{2}$/.test(body.date) ||
+      !/^\d{1,2}:\d{2}$/.test(body.time)
+    ) {
+      return NextResponse.json({ error: "invalid date/time" }, { status: 400 });
+    }
+    const moved = await rescheduleAppointment(body.id, body.date, body.time);
+    if (!moved) {
+      return NextResponse.json({ error: "not found" }, { status: 404 });
+    }
+    return NextResponse.json(moved);
+  }
+
+  // Status change.
+  if (!body.status || !STATUSES.includes(body.status)) {
+    return NextResponse.json({ error: "valid status required" }, { status: 400 });
+  }
+  const appt = await setAppointmentStatus(body.id, body.status);
   if (!appt) {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }

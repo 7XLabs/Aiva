@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import Anthropic from "@anthropic-ai/sdk";
 import { addBusiness } from "@/lib/db";
 import { generateBusiness } from "@/lib/onboard";
 import { clientKey, rateLimit } from "@/lib/rateLimit";
@@ -38,6 +39,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(business);
   } catch (err) {
     console.error("onboard error", err);
+    if (err instanceof Anthropic.AuthenticationError) {
+      return NextResponse.json(
+        { error: "The Anthropic API key is invalid. Check ANTHROPIC_API_KEY." },
+        { status: 502 }
+      );
+    }
     return NextResponse.json(
       { error: "Generation failed — please try again." },
       { status: 500 }

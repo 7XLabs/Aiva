@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import Anthropic from "@anthropic-ai/sdk";
 import { generateDigest } from "@/lib/digest";
 
 export const runtime = "nodejs";
@@ -19,6 +20,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(digest);
   } catch (err) {
     console.error("digest error", err);
+    if (err instanceof Anthropic.AuthenticationError) {
+      return NextResponse.json(
+        { error: "The Anthropic API key is invalid. Check ANTHROPIC_API_KEY." },
+        { status: 502 }
+      );
+    }
     return NextResponse.json(
       { error: "Report generation failed — please try again." },
       { status: 500 }

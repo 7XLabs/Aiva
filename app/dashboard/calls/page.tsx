@@ -1,8 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { callDuration, relativeTime } from "@/lib/format";
+
+// Inline staff note editor with debounced autosave.
+function StaffNote({ callId, initial }: { callId: string; initial?: string }) {
+  const [note, setNote] = useState(initial ?? "");
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (note === (initial ?? "")) return;
+    const t = setTimeout(async () => {
+      await fetch("/api/calls/note", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ callId, note }),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    }, 800);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [note]);
+
+  return (
+    <div className="mb-4">
+      <div className="mb-1 flex items-center justify-between">
+        <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+          Staff note
+        </label>
+        {saved && <span className="text-xs text-emerald-400">Saved ✓</span>}
+      </div>
+      <textarea
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        rows={2}
+        placeholder="Add context for your team — autosaves as you type…"
+        className="w-full resize-none rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-300 outline-none focus:border-brand-500"
+      />
+    </div>
+  );
+}
 
 const OUTCOME_COLORS: Record<string, string> = {
   appointment_booked: "bg-emerald-500/15 text-emerald-300",
@@ -149,6 +188,7 @@ export default function CallsPage() {
             </button>
             {openId === c.id && (
               <div className="border-t border-slate-800 px-5 py-4">
+                <StaffNote callId={c.id} initial={c.staffNote} />
                 {(c.actionItems?.length || c.upsellOpportunity) && (
                   <div className="mb-4 space-y-2 rounded-xl bg-slate-800/40 p-3 text-xs">
                     {c.actionItems?.map((a, i) => (

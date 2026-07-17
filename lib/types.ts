@@ -66,6 +66,8 @@ export interface Appointment {
   serviceName: string;
   date: string; // YYYY-MM-DD
   time: string; // HH:mm
+  // Minutes the slot occupies; drives duration-aware conflict checks.
+  durationMinutes?: number;
   status: "confirmed" | "cancelled" | "completed";
   notes?: string;
   createdAt: string;
@@ -127,6 +129,8 @@ export interface CallLog {
   resolved?: boolean; // did AIVA fully resolve the caller's need?
   actionItems?: string[];
   upsellOpportunity?: string;
+  // Free-form note staff attach after reviewing the call.
+  staffNote?: string;
 }
 
 // A caller waiting for a slot to open up on a full day. When a cancellation

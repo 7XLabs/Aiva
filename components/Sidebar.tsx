@@ -11,6 +11,7 @@ const NAV = [
   { href: "/dashboard/appointments", label: "Appointments", icon: "📅" },
   { href: "/dashboard/orders", label: "Orders", icon: "🍽️" },
   { href: "/dashboard/tasks", label: "Action items", icon: "✅" },
+  { href: "/dashboard/day-sheet", label: "Day sheet", icon: "🖨" },
   { href: "/dashboard/analytics", label: "Analytics", icon: "📈" },
   { href: "/dashboard/settings", label: "Knowledge", icon: "🧠" },
 ];

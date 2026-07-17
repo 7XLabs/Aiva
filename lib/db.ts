@@ -11,6 +11,7 @@ import type {
   WaitlistEntry,
 } from "./types";
 import { seedBusinesses } from "./seed";
+import { intervalsOverlap } from "./overlap";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 
@@ -102,14 +103,19 @@ export async function addAppointment(appt: Appointment) {
   return appt;
 }
 
+// Duration-aware: a 90-minute booking at 10:00 blocks 10:30 and 11:00 too.
 export async function isSlotTaken(
   businessId: string,
   date: string,
-  time: string
+  time: string,
+  durationMinutes = 30
 ): Promise<boolean> {
   const appts = await getAppointments(businessId);
   return appts.some(
-    (a) => a.date === date && a.time === time && a.status === "confirmed"
+    (a) =>
+      a.date === date &&
+      a.status === "confirmed" &&
+      intervalsOverlap(time, durationMinutes, a.time, a.durationMinutes ?? 30)
   );
 }
 

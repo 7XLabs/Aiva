@@ -14,6 +14,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function AppointmentsPage() {
   const { data } = useDashboardData();
   const [overrides, setOverrides] = useState<Record<string, Appointment["status"]>>({});
+  const [dateFilter, setDateFilter] = useState<"all" | "today" | "upcoming" | "past">("upcoming");
 
   async function setStatus(id: string, status: Appointment["status"]) {
     setOverrides((o) => ({ ...o, [id]: status }));
@@ -40,6 +41,13 @@ export default function AppointmentsPage() {
   }
 
   const appts = (data?.appointments ?? [])
+    .filter((a) => {
+      if (dateFilter === "all") return true;
+      const today = new Date().toISOString().slice(0, 10);
+      if (dateFilter === "today") return a.date === today;
+      if (dateFilter === "upcoming") return a.date >= today;
+      return a.date < today; // past
+    })
     .map((a) => (overrides[a.id] ? { ...a, status: overrides[a.id] } : a))
     .slice()
     .sort((a, b) => `${b.date}${b.time}`.localeCompare(`${a.date}${a.time}`));
@@ -68,13 +76,25 @@ export default function AppointmentsPage() {
             Bookings made by AIVA on your behalf.
           </p>
         </div>
-        <button
-          onClick={exportCsv}
-          disabled={appts.length === 0}
-          className="btn-secondary !px-4 !py-2 text-sm disabled:opacity-40"
-        >
-          ⬇ Export CSV
-        </button>
+        <div className="flex gap-2">
+          <select
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value as typeof dateFilter)}
+            className="rounded-xl border border-slate-700/80 bg-slate-900/80 px-3 py-2 text-sm outline-none"
+          >
+            <option value="upcoming">Upcoming</option>
+            <option value="today">Today</option>
+            <option value="past">Past</option>
+            <option value="all">All</option>
+          </select>
+          <button
+            onClick={exportCsv}
+            disabled={appts.length === 0}
+            className="btn-secondary !px-4 !py-2 text-sm disabled:opacity-40"
+          >
+            ⬇ Export CSV
+          </button>
+        </div>
       </div>
 
       <div className="mt-6 overflow-x-auto">

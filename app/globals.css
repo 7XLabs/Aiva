@@ -194,6 +194,27 @@ html[data-theme="light"] textarea {
   animation: pulse-ring 1.6s ease-out infinite;
 }
 
+/* ---------- Print (day sheet) ---------- */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  header,
+  aside,
+  footer,
+  .print\:hidden {
+    display: none !important;
+  }
+  main {
+    color: black !important;
+  }
+  .card {
+    border-color: #ccc !important;
+    background: white !important;
+  }
+}
+
 /* ---------- Scrollbar ---------- */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }

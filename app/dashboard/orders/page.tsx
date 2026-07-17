@@ -33,6 +33,29 @@ export default function OrdersPage() {
     });
   }
 
+  function exportCsv() {
+    const esc = (s: string | number) => `"${String(s).replace(/"/g, '""')}"`;
+    const rows = [
+      ["created", "customer", "phone", "items", "total", "type", "status"],
+      ...orders.map((o) => [
+        o.createdAt,
+        o.customerName,
+        o.customerPhone,
+        o.items.map((i) => `${i.quantity}x ${i.name}`).join("; "),
+        o.total.toFixed(2),
+        o.type,
+        o.status,
+      ]),
+    ];
+    const csv = rows.map((r) => r.map(esc).join(",")).join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `aiva-orders-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   const orders = (data?.orders ?? [])
     .map((o) => (overrides[o.id] ? { ...o, status: overrides[o.id] } : o))
     .slice()
@@ -40,10 +63,21 @@ export default function OrdersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Orders</h1>
-      <p className="mt-1 text-sm text-slate-400">
-        Phone orders captured by AIVA, item by item.
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">Orders</h1>
+          <p className="mt-1 text-sm text-slate-400">
+            Phone orders captured by AIVA, item by item.
+          </p>
+        </div>
+        <button
+          onClick={exportCsv}
+          disabled={orders.length === 0}
+          className="btn-secondary !px-4 !py-2 text-sm disabled:opacity-40"
+        >
+          ⬇ Export CSV
+        </button>
+      </div>
 
       <div className="mt-6 space-y-4">
         {orders.length === 0 && (

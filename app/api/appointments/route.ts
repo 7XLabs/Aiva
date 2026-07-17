@@ -5,7 +5,12 @@ import type { Appointment } from "@/lib/types";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const STATUSES: Appointment["status"][] = ["confirmed", "cancelled", "completed"];
+const STATUSES: Appointment["status"][] = [
+  "confirmed",
+  "cancelled",
+  "completed",
+  "no_show",
+];
 
 export async function PATCH(req: NextRequest) {
   const { id, status } = (await req.json()) as {

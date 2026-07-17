@@ -30,6 +30,11 @@ npm run dev
 - Voice replies must stay short — this is a phone call, not a chat window.
 - New agent tools need: a prescriptive description (when to call it), input validation, and an error path that tells the model how to recover.
 
+## Good first issues
+
+New here? See [docs/GOOD_FIRST_ISSUES.md](docs/GOOD_FIRST_ISSUES.md) for
+scoped, beginner-friendly tasks.
+
 ## Where help is wanted
 
 - Calendar integrations (Google Calendar, Cal.com)

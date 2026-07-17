@@ -8,6 +8,7 @@ const STATUS_COLORS: Record<string, string> = {
   confirmed: "bg-emerald-500/15 text-emerald-300",
   cancelled: "bg-red-500/15 text-red-300",
   completed: "bg-slate-500/15 text-slate-300",
+  no_show: "bg-orange-500/15 text-orange-300",
 };
 
 export default function AppointmentsPage() {
@@ -124,6 +125,12 @@ export default function AppointmentsPage() {
                         className="rounded-lg border border-emerald-500/30 px-2.5 py-1 text-xs text-emerald-300 transition hover:bg-emerald-500/15"
                       >
                         Complete
+                      </button>
+                      <button
+                        onClick={() => setStatus(a.id, "no_show")}
+                        className="rounded-lg border border-orange-500/30 px-2.5 py-1 text-xs text-orange-300 transition hover:bg-orange-500/15"
+                      >
+                        No-show
                       </button>
                       <button
                         onClick={() => setStatus(a.id, "cancelled")}

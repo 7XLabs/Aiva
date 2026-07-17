@@ -63,7 +63,15 @@ export default function DemoPage() {
   useEffect(() => {
     fetch("/api/businesses")
       .then((r) => r.json())
-      .then(setBusinesses)
+      .then((list) => {
+        setBusinesses(list);
+        // Deep link: /demo?biz=biz_restaurant&lang=es preselects.
+        const params = new URLSearchParams(window.location.search);
+        const biz = params.get("biz");
+        const preLang = params.get("lang");
+        if (biz && list.some((b: Business) => b.id === biz)) setBusinessId(biz);
+        if (preLang && SPEECH_LOCALES[preLang]) setLang(preLang);
+      })
       .catch(() => {});
     const SR =
       (window as any).SpeechRecognition ||
@@ -396,13 +404,24 @@ export default function DemoPage() {
             </div>
           </div>
 
-          <p className="mt-6 text-center text-xs text-slate-500">
-            Bookings and orders made here appear live in the{" "}
-            <Link href="/dashboard" className="text-brand-400 hover:underline">
-              dashboard
-            </Link>
-            {" "}— hang up to see AIVA&apos;s post-call analysis.
-          </p>
+          <div className="mt-6 flex flex-col items-center gap-2 text-center text-xs text-slate-500">
+            <p>
+              Bookings and orders made here appear live in the{" "}
+              <Link href="/dashboard" className="text-brand-400 hover:underline">
+                dashboard
+              </Link>
+              {" "}— hang up to see AIVA&apos;s post-call analysis.
+            </p>
+            <button
+              onClick={() => {
+                const url = `${window.location.origin}/demo?biz=${businessId}&lang=${lang}`;
+                navigator.clipboard?.writeText(url);
+              }}
+              className="text-slate-400 hover:text-white"
+            >
+              🔗 Copy shareable link to this business
+            </button>
+          </div>
         </div>
       </main>
     </>

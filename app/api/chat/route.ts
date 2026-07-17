@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getBusiness, getCall, upsertCall } from "@/lib/db";
 import { runAgentTurn, type ChatTurn } from "@/lib/agent";
 import type { CallLog } from "@/lib/types";
-import { clientKey, rateLimit } from "@/lib/rateLimit";
+import { clientKey, rateLimit, rateLimitHeaders } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
   if (!rl.ok) {
     return NextResponse.json(
       { reply: "You're sending messages very fast — give me a few seconds.", events: [] },
-      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } }
+      { status: 429, headers: rateLimitHeaders(30, rl) }
     );
   }
   try {

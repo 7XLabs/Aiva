@@ -68,7 +68,7 @@ export interface Appointment {
   time: string; // HH:mm
   // Minutes the slot occupies; drives duration-aware conflict checks.
   durationMinutes?: number;
-  status: "confirmed" | "cancelled" | "completed";
+  status: "confirmed" | "cancelled" | "completed" | "no_show";
   notes?: string;
   createdAt: string;
   // Set once the reminder engine has texted this appointment (dedup guard).

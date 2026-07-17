@@ -448,6 +448,15 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      <div className="card mt-6 border-amber-500/30">
+        <h2 className="font-semibold">📢 Emergency broadcast</h2>
+        <p className="mt-1 text-xs text-slate-500">
+          Text everyone with an appointment today — closures, delays, weather.
+          One message per customer.
+        </p>
+        <BroadcastForm businessId={selected.id} />
+      </div>
+
       <div className="card mt-6 border-brand-500/30">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -497,6 +506,67 @@ export default function SettingsPage() {
           {saving ? "Saving…" : "Save changes"}
         </button>
       </div>
+    </div>
+  );
+}
+
+function BroadcastForm({ businessId }: { businessId: string }) {
+  const [message, setMessage] = useState("");
+  const [scope, setScope] = useState<"today" | "tomorrow" | "both">("today");
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+
+  async function send() {
+    if (!message.trim() || busy) return;
+    if (!confirm(`Text every customer with an appointment (${scope})?`)) return;
+    setBusy(true);
+    setResult(null);
+    try {
+      const res = await fetch("/api/broadcast", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ businessId, message, scope }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "failed");
+      setResult(
+        `Matched ${data.matched} customer${data.matched === 1 ? "" : "s"}, sent ${data.sent} SMS${
+          data.sent === 0 ? " (Twilio not configured?)" : ""
+        }.`
+      );
+      setMessage("");
+    } catch (e) {
+      setResult(e instanceof Error ? e.message : "Broadcast failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-4 flex flex-wrap gap-3">
+      <input
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        placeholder="We're closing at 2 PM today due to a power outage."
+        className="min-w-64 flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+      />
+      <select
+        value={scope}
+        onChange={(e) => setScope(e.target.value as typeof scope)}
+        className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+      >
+        <option value="today">Today&apos;s appointments</option>
+        <option value="tomorrow">Tomorrow&apos;s</option>
+        <option value="both">Both days</option>
+      </select>
+      <button
+        onClick={send}
+        disabled={busy || !message.trim()}
+        className="btn-secondary !border-amber-500/40 !px-4 !py-2 text-sm !text-amber-300 disabled:opacity-40"
+      >
+        {busy ? "Sending…" : "Send broadcast"}
+      </button>
+      {result && <p className="w-full text-xs text-slate-400">{result}</p>}
     </div>
   );
 }

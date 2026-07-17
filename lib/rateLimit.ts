@@ -27,3 +27,18 @@ export function clientKey(req: { headers: Headers }, route: string): string {
     "local";
   return `${route}:${ip}`;
 }
+
+// Standard rate-limit headers for a response.
+export function rateLimitHeaders(
+  limit: number,
+  result: { ok: boolean; retryAfterSec: number }
+): Record<string, string> {
+  const headers: Record<string, string> = {
+    "X-RateLimit-Limit": String(limit),
+  };
+  if (!result.ok) {
+    headers["Retry-After"] = String(result.retryAfterSec);
+    headers["X-RateLimit-Remaining"] = "0";
+  }
+  return headers;
+}

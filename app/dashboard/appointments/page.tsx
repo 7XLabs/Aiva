@@ -24,6 +24,21 @@ export default function AppointmentsPage() {
     });
   }
 
+  async function reschedule(a: Appointment) {
+    const input = prompt(
+      `Reschedule ${a.customerName}'s ${a.serviceName}.\nEnter new date & time as "YYYY-MM-DD HH:mm":`,
+      `${a.date} ${a.time}`
+    );
+    if (!input) return;
+    const [date, time] = input.trim().split(/\s+/);
+    const res = await fetch("/api/appointments", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: a.id, date, time }),
+    });
+    if (!res.ok) alert("Reschedule failed — check the date/time format.");
+  }
+
   const appts = (data?.appointments ?? [])
     .map((a) => (overrides[a.id] ? { ...a, status: overrides[a.id] } : a))
     .slice()
@@ -125,6 +140,12 @@ export default function AppointmentsPage() {
                         className="rounded-lg border border-emerald-500/30 px-2.5 py-1 text-xs text-emerald-300 transition hover:bg-emerald-500/15"
                       >
                         Complete
+                      </button>
+                      <button
+                        onClick={() => reschedule(a)}
+                        className="rounded-lg border border-sky-500/30 px-2.5 py-1 text-xs text-sky-300 transition hover:bg-sky-500/15"
+                      >
+                        Reschedule
                       </button>
                       <button
                         onClick={() => setStatus(a.id, "no_show")}

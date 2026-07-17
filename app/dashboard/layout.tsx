@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 import Sidebar from "@/components/Sidebar";
+import CommandPalette from "@/components/CommandPalette";
 import { BusinessProvider, BusinessSelect } from "@/components/BusinessFilter";
 
 export default function DashboardLayout({
@@ -15,6 +16,7 @@ export default function DashboardLayout({
 }) {
   return (
     <BusinessProvider>
+      <CommandPalette />
       <Navbar />
       <div className="container-page flex gap-8 py-8">
         <aside className="hidden w-52 shrink-0 md:block">

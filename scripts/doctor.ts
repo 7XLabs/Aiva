@@ -1,5 +1,7 @@
 // Config doctor: prints which integrations are wired up.
 //   npm run doctor
+import { loadEnvConfig } from "@next/env";
+loadEnvConfig(process.cwd()); // read .env.local like Next.js does
 import { integrationSummary } from "../lib/env";
 
 console.log("AIVA configuration check\n");

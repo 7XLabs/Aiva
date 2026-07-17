@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Logo from "./Logo";
+import ThemeToggle from "./ThemeToggle";
 
 const LINKS: [string, string][] = [
   ["/#features", "Features"],
@@ -48,6 +49,7 @@ export default function Navbar() {
           ))}
         </nav>
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           <Link href="/demo" className="btn-primary !px-4 !py-2 text-sm">
             Try the demo
           </Link>

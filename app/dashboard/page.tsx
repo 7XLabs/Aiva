@@ -28,6 +28,14 @@ export default function DashboardOverview() {
     .sort((a, b) => b.startedAt.localeCompare(a.startedAt))
     .slice(0, 5);
 
+  // Unhappy callers from the last 24h — worth an owner's immediate attention.
+  const dayAgo = Date.now() - 86400_000;
+  const needsAttention = (data?.calls ?? []).filter(
+    (c) =>
+      new Date(c.startedAt).getTime() > dayAgo &&
+      (c.sentiment === "negative" || c.resolved === false)
+  );
+
   return (
     <div>
       <h1 className="text-2xl font-bold">Overview</h1>
@@ -46,6 +54,37 @@ export default function DashboardOverview() {
           </Link>
         ))}
       </div>
+
+      {needsAttention.length > 0 && (
+        <div className="mt-8 rounded-2xl border border-red-500/30 bg-red-500/[0.06] p-5">
+          <h2 className="flex items-center gap-2 font-semibold text-red-300">
+            ⚠️ Needs attention
+            <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-xs">
+              {needsAttention.length}
+            </span>
+          </h2>
+          <p className="mt-1 text-xs text-slate-400">
+            Unhappy or unresolved callers in the last 24 hours.
+          </p>
+          <ul className="mt-3 space-y-2">
+            {needsAttention.slice(0, 5).map((c) => (
+              <li key={c.id} className="flex items-start gap-3 text-sm">
+                <span>{c.sentiment === "negative" ? "😠" : "⚠️"}</span>
+                <div className="min-w-0">
+                  <span className="text-slate-300">{c.summary ?? c.callerPhone}</span>
+                  <span className="ml-2 text-xs text-slate-500">{c.callerPhone}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <Link
+            href="/dashboard/calls"
+            className="mt-3 inline-block text-xs text-red-300 hover:underline"
+          >
+            Review all calls →
+          </Link>
+        </div>
+      )}
 
       <h2 className="mt-10 text-lg font-semibold">Today&apos;s schedule</h2>
       <div className="mt-4">

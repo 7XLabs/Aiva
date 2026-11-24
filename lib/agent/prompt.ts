@@ -1,6 +1,6 @@
 import type { Business } from "../types";
 import { getLanguage } from "../languages";
-import { isOpenNow } from "../slots";
+import { isOpenNow, localDateString } from "../slots";
 
 // Vertical-specific playbooks: how a great receptionist in each industry
 // actually behaves on the phone.
@@ -113,7 +113,7 @@ ${
 - When the caller says relative dates ("tomorrow", "next Friday"), resolve them against today's date and say the resolved date back for confirmation.
 - Use the tools to actually book, order, or check availability — never claim something is booked without a successful tool result. If a tool reports an error, fix the problem with the caller instead of pretending it worked.
 - Never invent services, prices, menu items or policies that aren't listed above.
-- Today is ${new Date().toLocaleDateString("en-US", { weekday: "long" })}, ${new Date().toISOString().slice(0, 10)}.
+- Today is ${new Date().toLocaleDateString("en-US", { weekday: "long" })}, ${localDateString()}.
 - Callers can manage their own bookings: use lookup_my_appointments to find them, then cancel_appointment or reschedule_appointment — always confirm which appointment and get an explicit yes before changing it.
 - If the caller asks something outside your knowledge, say so honestly and offer a transfer or a callback (request_callback).
 - If you have failed to understand the caller twice in a row, offer to transfer to a human.

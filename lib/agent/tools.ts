@@ -12,7 +12,7 @@ import {
   setAppointmentStatus,
   setWaitlistStatus,
 } from "../db";
-import { findFreeSlots, isClosedOn, parseBookableWindow } from "../slots";
+import { findFreeSlots, isClosedOn, localDateString, parseBookableWindow } from "../slots";
 import { occurrenceDates } from "../recurrence";
 import { sendSms } from "../sms";
 import { bookingConfirmationSms, orderConfirmationSms } from "../smsTemplates";
@@ -266,7 +266,7 @@ export async function executeTool(
             isError: true,
           };
         }
-        const today = new Date().toISOString().slice(0, 10);
+        const today = localDateString();
         if (date < today) {
           return {
             result: `${date} is in the past (today is ${today}). Ask the caller for a future date.`,
@@ -476,7 +476,7 @@ export async function executeTool(
             isError: true,
           };
         }
-        const todayIso = new Date().toISOString().slice(0, 10);
+        const todayIso = localDateString();
         if (firstDate < todayIso) {
           return { result: `${firstDate} is in the past. Ask for a future start date.`, isError: true };
         }
@@ -553,7 +553,7 @@ export async function executeTool(
 
       case "lookup_my_appointments": {
         const phone = String(input.customer_phone);
-        const today = new Date().toISOString().slice(0, 10);
+        const today = localDateString();
         const upcoming = (await findAppointmentsByPhone(business.id, phone))
           .filter((a) => a.status === "confirmed" && a.date >= today)
           .sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`));
@@ -617,7 +617,7 @@ export async function executeTool(
             isError: true,
           };
         }
-        const todayStr = new Date().toISOString().slice(0, 10);
+        const todayStr = localDateString();
         if (newDate < todayStr) {
           return { result: `${newDate} is in the past. Ask for a future date.`, isError: true };
         }

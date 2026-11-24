@@ -63,13 +63,20 @@ export function isClosedOn(
   return !parseOpenDays(business.hours).has(weekday);
 }
 
+// Today's date (YYYY-MM-DD) in the server's local time, matching getHours()
+// and isClosedOn(). toISOString() would give the UTC date, which is already
+// tomorrow in the evening west of UTC.
+export function localDateString(now: Date = new Date()): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
 // Is the business open at this moment? Drives after-hours call behavior.
 export function isOpenNow(
   business: Pick<Business, "hours" | "holidays">,
   now: Date = new Date()
 ): boolean {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  const date = localDateString(now);
   if (isClosedOn(business, date)) return false;
   const { open, close } = parseBookableWindow(business.hours);
   const hour = now.getHours() + now.getMinutes() / 60;
@@ -92,7 +99,7 @@ export async function findFreeSlots(
 
   // Don't offer slots that are already in the past today.
   const now = new Date();
-  const isToday = date === now.toISOString().slice(0, 10);
+  const isToday = date === localDateString(now);
   const nowHours = now.getHours() + now.getMinutes() / 60;
 
   const free: string[] = [];
